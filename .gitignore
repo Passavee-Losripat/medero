@@ -24,3 +24,5 @@ data/mock/.fonts/
 video/shots/chrome-prof/
 web/.next-build/
 video/motion-standalone.html
+video/.audio/
+video/out/
