@@ -330,6 +330,9 @@ async def main() -> None:
                   "est_cost_usd": METER.est_cost_usd(s)},
     }
     out = Path(args.out)
+    if s.use_fake and out.resolve() == (ROOT / "eval" / "results").resolve():
+        out = ROOT / "eval" / "results" / "offline"  # never overwrite measured results with FAKE ones
+        print("no MODEL_API_KEY: writing to", out)
     out.mkdir(parents=True, exist_ok=True)
     (out / "latest.json").write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding="utf-8")
     (out / "latest.md").write_text(to_markdown(result), encoding="utf-8")
