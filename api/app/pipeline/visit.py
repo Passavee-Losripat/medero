@@ -15,7 +15,7 @@ from .. import fixed_text as fx
 from ..providers.llm import LLMProvider
 from ..safety import detect_emergency
 from ..schemas import AskBack, CaseCard, Fact, ReplyPlan, Statement, Turn, VisitRecord
-from . import prompts
+from . import fidelity, prompts
 from .router import route
 from .verifier import verify
 
@@ -150,7 +150,8 @@ class VisitSession:
         events.append({
             "type": "turn_result", "turn_id": turn.id, "turn_class": plan.turn_class,
             "router": r.provider, "router_confidence": r.confidence,
-            "clinician_said_patient_lang": gloss, "reply_ko": plan.reply_ko,
+            "clinician_said_patient_lang": gloss, "gloss_check": fidelity.compare(turn.korean_text, gloss) if gloss else [],
+            "reply_ko": plan.reply_ko,
             "reply_patient_lang": plan.reply_patient_lang, "evidence": self._evidence(plan.evidence),
             "ask_back": ask_event, "blocked": blocked, "confidence": plan.confidence,
             "latency_ms": lat, "spark_calls": spark_calls,
@@ -278,6 +279,13 @@ class VisitSession:
                              reply_patient_lang=str(res.data.get("reply_patient_lang") or ""),
                              evidence=[fid], confidence=_conf(res.data.get("confidence")))
             v = await verify(plan, self.card, self.spark if self.verifier_model else None)
+            # the Korean must keep the patient's numbers and any "no / not" (fidelity.py)
+            drift = fidelity.compare(answer, plan.reply_ko or "")
+            if drift:
+                v.ok = False
+                v.reasons = [*v.reasons, *(f"fidelity_{d}" for d in drift)]
+            if fact.value_ko and fidelity.compare(answer, fact.value_ko):
+                fact.value_ko = None
             if v.ok:
                 reply_ko, reply_pl = plan.reply_ko, plan.reply_patient_lang
             else:

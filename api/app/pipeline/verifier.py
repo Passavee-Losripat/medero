@@ -21,6 +21,8 @@ class Verdict:
     latency_ms: float = 0.0
 
 
+from .fidelity import has_negation  # noqa: E402
+
 _KO_NUM = {"하루": "1", "이틀": "2", "사흘": "3", "나흘": "4", "닷새": "5", "엿새": "6", "이레": "7",
            "열흘": "10", "보름": "15", "일주일": "7", "한 달": "1", "한달": "1",
            "한 번": "1", "두 번": "2", "세 번": "3", "네 번": "4", "한번": "1", "두번": "2", "세번": "3",
@@ -92,6 +94,11 @@ def check_rules(plan: ReplyPlan, card: CaseCard) -> Verdict:
     for n in numbers_in_korean(reply):
         if n not in allowed:
             reasons.append(f"rule3_number_not_in_evidence:{n}")
+
+    # Rule 3b: a "no / not" in the reply must come from a cited fact (catches "no allergies" from nothing).
+    if has_negation(reply) and not any(has_negation(f.value or "") or has_negation(f.value_ko or "")
+                                       for f in cited):
+        reasons.append("rule3b_negation_not_in_evidence")
 
     return Verdict(ok=not reasons, reasons=reasons)
 

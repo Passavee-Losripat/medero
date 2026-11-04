@@ -46,6 +46,7 @@ PATIENT_TEXT: dict[str, dict[str, str]] = {
         "rx_no_sub": "Printed 대체 불가: no substitute.",
         "rx_handwritten": "Handwritten note: \"{note}\". Check it with the pharmacist.",
         "rx_truncated": "The name is cut off on the form. Ask the pharmacist for the full name.",
+        "rx_gloss_mismatch": "The translation may not match the printed numbers. Trust the printed Korean numbers above and ask the pharmacist.",
         "code_request": "If your insurer needs a disease code, you can show this to the clinic staff:",
     },
     "th": {
@@ -64,6 +65,7 @@ PATIENT_TEXT: dict[str, dict[str, str]] = {
         "rx_no_sub": "พิมพ์ว่า 대체 불가: ห้ามเปลี่ยนเป็นยาอื่น",
         "rx_handwritten": "มีข้อความเขียนด้วยมือ: \"{note}\" กรุณาตรวจสอบกับเภสัชกร",
         "rx_truncated": "ชื่อยาถูกตัดบนใบสั่งยา กรุณาถามชื่อเต็มจากเภสัชกร",
+        "rx_gloss_mismatch": "คำแปลอาจไม่ตรงกับตัวเลขที่พิมพ์ไว้ ให้ยึดตัวเลขภาษาเกาหลีที่พิมพ์ด้านบน และถามเภสัชกร",
         "code_request": "ถ้าบริษัทประกันต้องใช้รหัสโรค คุณสามารถแสดงข้อความนี้ให้เจ้าหน้าที่คลินิกดูได้:",
     },
 }

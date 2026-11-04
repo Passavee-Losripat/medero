@@ -105,6 +105,8 @@ async def eval_visits(router_name: str, cases: dict) -> dict:
     blocked_before = 0
     replies = 0
     calls_per_visit = []
+    glosses = gloss_flagged = 0
+    gloss_rows = []
     for play in plays:
         sess = new_session(card_for(cases[play["case"]]), spark_provider(s), router_provider(s, router_name),
                            verifier_model=s.verifier_model_check)
@@ -116,6 +118,12 @@ async def eval_visits(router_name: str, cases: dict) -> dict:
             if res is None:
                 continue
             calls += res["spark_calls"]
+            if res.get("clinician_said_patient_lang"):
+                glosses += 1
+                if res.get("gloss_check"):
+                    gloss_flagged += 1
+                    gloss_rows.append({"turn": t["ko"], "gloss": res["clinician_said_patient_lang"],
+                                       "issues": res["gloss_check"]})
             for k in ("route", "respond", "verify", "total"):
                 if res["latency_ms"].get(k) is not None:
                     stage[k].append(res["latency_ms"][k])
@@ -160,6 +168,7 @@ async def eval_visits(router_name: str, cases: dict) -> dict:
         "unsupported_claims_after_verifier": unsupported_after, "spoken_replies": replies,
         "audit_flagged": audit_flagged, "audit_failed": audit_failed, "audit_rows": audit_rows,
         "replies_blocked_by_verifier": blocked_before,
+        "doctor_translations": glosses, "doctor_translations_flagged": gloss_flagged, "gloss_rows": gloss_rows,
         "latency_ms": {k: {"p50": pct(v, 0.5), "p95": pct(v, 0.95)} for k, v in stage.items()},
         "api_calls_per_visit_mean": round(statistics.mean(calls_per_visit), 2) if calls_per_visit else None,
     }
@@ -266,6 +275,8 @@ def to_markdown(r: dict) -> str:
               f"- Independent Spark audit flagged as unsupported: **{v['audit_flagged']}** of {v['spoken_replies']}"
               + (f" (audit call failed on {v['audit_failed']})" if v['audit_failed'] else ""),
               f"- Replies blocked by the verifier (became ask-backs): {v['replies_blocked_by_verifier']}",
+              f"- Doctor's words translated for the patient: {v.get('doctor_translations')}, flagged by the "
+              f"number/negation check: {v.get('doctor_translations_flagged')}",
               f"- Meta API calls per visit (mean): {v['api_calls_per_visit_mean']}", "",
               "| Stage | p50 ms | p95 ms |", "|---|---|---|"]
         for k, s in v["latency_ms"].items():

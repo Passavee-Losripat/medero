@@ -39,3 +39,10 @@ Short log. Newest last.
 - **2026-11-05 – Korean speech output via the browser's Web Speech API.** Muse has no TTS. The phone's
   built-in ko-KR voice is on-device, free, needs no new dependency, and stores no audio. On-screen large Korean
   text stays the primary output; speech is a toggle. Hands-free listening pauses while speaking.
+- **2026-11-05 – Translation fidelity checks (`pipeline/fidelity.py`).** Deterministic comparison of source
+  and translation on numerals and negation ("not / 없 / ไม่"), the errors that change meaning in a clinic.
+  Blocking for Korean said to the doctor: a patient relay that drifts falls back to the patient's own words;
+  a case-card Korean that drifts is discarded; a reply with a "no/not" that no cited fact contains is
+  blocked (verifier rule 3b). Flagging for text shown to the patient: the doctor's translated words and the
+  prescription gloss get a warning, and the original Korean / printed numbers stay on screen. Time words
+  (yesterday, a week, 하루) are deliberately not counted as numbers to avoid false alarms.

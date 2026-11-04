@@ -235,6 +235,7 @@ function Bubble({ it, s }: { it: Ev; s: ReturnType<typeof t> }) {
         <div className="msg doctor fade-in">
           <div className="who">{s.doctorSaid}</div>
           <div className="gloss">{it.clinician_said_patient_lang}</div>
+          {it.gloss_check?.length > 0 && <div className="badge warn" style={{ marginTop: 6, whiteSpace: "normal" }}>⚠ {s.glossWarn}</div>}
         </div>
       )}
       {it.reply_ko && (

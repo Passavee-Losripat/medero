@@ -251,7 +251,7 @@ async def test_prescription_form_notes_are_fixed_and_identifiers_scrubbed():
                 "items": [{"drug_name_ko": "세레노정(MOCK)", "dose": "1", "times_per_day": "2", "days": "5",
                            "substitution_ko": "불가", "instructions_ko": "식후30분", "not_covered": True,
                            "handwritten_note": "→아침, 저녁", "truncated": False,
-                           "gloss_patient_lang": "Patient 990101-1234567: 1 tablet twice a day", "confidence": 0.95}]}
+                           "gloss_patient_lang": "Patient 990101-1234567: 1 tablet, 2 times a day, 5 days, 30 minutes after meals", "confidence": 0.95}]}
 
     r = await documents.read_prescription(b"x", "image/png", "en", FakeProvider(handler=form))
     it = r.items[0]
@@ -272,3 +272,42 @@ async def test_prescription_code_printed_no_request():
 
     r = await documents.read_prescription(b"x", "image/png", "en", FakeProvider(handler=form))
     assert r.request_ko is None and r.disease_code == "J02.9" and r.valid_days is None
+
+
+async def test_fidelity_catches_number_and_negation_drift():
+    from app.pipeline.fidelity import compare
+    assert compare("5 days", "3일 됐어요") == ["number_missing:5", "number_added:3"]
+    assert compare("I am not allergic", "알레르기가 있습니다") == ["negation_mismatch"]
+    for src, dst in [("하루 세 번 넣으세요", "Put it in three times a day"), ("since yesterday", "어제부터요"),
+                     ("Eye drops, please.", "안약으로 해 주세요."), ("ไม่มีค่ะ", "없습니다."), ("สามี", "남편")]:
+        assert compare(src, dst) == [], (src, dst)
+
+
+async def test_relay_that_flips_a_negation_shows_patient_words():
+    def flip(task, system, user):
+        if task == "relay":
+            return {"reply_ko": "알레르기가 있습니다.", "reply_patient_lang": "x", "fact_value_ko": "있음",
+                    "confidence": 0.9}
+        from app.providers.fake import default_handler
+        return default_handler(task, system, user)
+
+    sess = new_session(demo_card(), FakeProvider(handler=flip), None)
+    sess.set_consent(True)
+    ev = await sess.patient_say("I am not allergic to anything")
+    r = ev[0]
+    assert r["blocked"] and "fidelity_negation_mismatch" in r["blocked"]["reasons"]
+    assert r["reply_ko"].endswith("I am not allergic to anything")   # the patient's own words, untranslated
+
+
+async def test_reply_with_unsupported_negation_is_blocked():
+    def liar(task, system, user):
+        if task == "respond":
+            return {"clinician_said_patient_lang": "x", "reply_ko": "3일 됐고 열은 없어요.",
+                    "reply_patient_lang": "x", "evidence": ["sym_duration"], "confidence": 0.9}
+        from app.providers.fake import default_handler
+        return default_handler(task, system, user)
+
+    sess = new_session(demo_card(), FakeProvider(handler=liar), None)
+    sess.set_consent(True)
+    res = [e for e in await sess.clinician_turn("며칠 됐어요?") if e["type"] == "turn_result"][0]
+    assert res["blocked"] and "rule3b_negation_not_in_evidence" in res["blocked"]["reasons"]

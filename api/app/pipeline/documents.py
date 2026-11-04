@@ -15,6 +15,7 @@ from .. import fixed_text as fx
 from ..providers.llm import LLMProvider
 from ..safety import glossary, unglossed_korean
 from ..schemas import CapturedDoc, ClaimPack, PrescriptionItem, PrescriptionReading
+from . import fidelity
 from .intake import scrub
 from .prompts import CORE_RULES, glossary_block, lang_name
 
@@ -110,6 +111,11 @@ async def read_prescription(data: bytes, mime: str, lang: str, provider: LLMProv
         if item.handwritten_note or item.truncated:
             item.confidence = min(item.confidence, 0.6)
         item.flags_patient_lang = _item_flags(item, lang)
+        printed = " ".join(x for x in [item.dose, item.times_per_day, item.days, item.instructions_ko] if x)
+        if fidelity.compare(printed, item.gloss_patient_lang):
+            # the translation's numbers differ from the printed ones: the printed Korean is the reference
+            item.confidence = min(item.confidence, 0.5)
+            item.flags_patient_lang.insert(0, fx.patient_text("rx_gloss_mismatch", lang))
         flagged |= set(unglossed_korean(item.instructions_ko or ""))
         items.append(item)
     kind = d.get("doc_kind") if d.get("doc_kind") in ("prescription_form", "medicine_bag") else "other"

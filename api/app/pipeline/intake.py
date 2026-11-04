@@ -8,7 +8,7 @@ import re
 from ..providers.llm import LLMProvider
 from ..safety import detect_emergency
 from ..schemas import CaseCard, Fact, IntakeAnswers
-from . import prompts
+from . import fidelity, prompts
 
 # Guardrail 10: identifiers never reach a model.
 _ID_PATTERNS = [
@@ -78,6 +78,10 @@ async def render_korean(card: CaseCard, provider: LLMProvider) -> tuple[CaseCard
     for item in res.data.get("facts", []):
         f = card.fact(str(item.get("id")))
         if f and f.approved and item.get("value_ko"):
+            if fidelity.compare(f.value or "", str(item["value_ko"])):
+                # a dropped/added number or flipped "not": keep no Korean rather than a wrong one
+                untranslated.append(f.value or "")
+                continue
             f.value_ko = str(item["value_ko"])
             untranslated += [str(t) for t in item.get("untranslated_terms") or []]
     return card, sorted(set(untranslated)), None
