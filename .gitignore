@@ -21,3 +21,4 @@ eval/results/offline/
 .env.tmp
 data/mock/.fonts/
 /IMG_*
+video/shots/chrome-prof/
