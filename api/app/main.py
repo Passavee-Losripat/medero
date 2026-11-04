@@ -46,7 +46,8 @@ def mixed_script(text: str) -> bool:
 def is_korean(text: str) -> bool:
     letters = [c for c in text if c.isalpha()]
     hangul = [c for c in letters if "\uac00" <= c <= "\ud7a3"]
-    return bool(letters) and len(hangul) / len(letters) >= 0.4
+    # 60%: a patient's English with Korean loanwords ("아이 드롭스, please") must not count as the doctor
+    return bool(letters) and len(hangul) / len(letters) >= 0.6
 
 app = FastAPI(title="Medero API")
 settings = get_settings()

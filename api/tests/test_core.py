@@ -338,3 +338,11 @@ def test_mixed_script_transcript_is_uncertain():
     from app.main import mixed_script
     assert mixed_script("어 렌즈는ทางบริการ끼지마세요")
     assert not mixed_script("렌즈는 당분간 끼지 마세요. 1층 약국")
+
+
+
+def test_patient_english_with_korean_loanword_is_not_the_doctor():
+    from app.main import is_korean
+    assert not is_korean("아이 드롭스, please.")          # ASR spelled "eye drops" in Hangul
+    assert is_korean("MRI 찍어볼게요. 괜찮으세요?")
+    assert is_korean("안약하고 연고 중에 어떤 걸로 드릴까요?")
