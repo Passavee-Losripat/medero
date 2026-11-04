@@ -1,0 +1,9 @@
+{"_label": "MOCK role-play. Simulated clinic. Korean needs native-speaker review.",
+ "id": "rp03_ankle", "case": "c03_ankle",
+ "turns": [
+  {"ko": "어디를 다치셨어요?", "expect": "on_card"},
+  {"ko": "많이 아프세요?", "expect": "on_card"},
+  {"ko": "전에도 이쪽 발목 다친 적 있어요?", "expect": "needs_fact", "patient_answer": "No, first time."},
+  {"ko": "엑스레이 찍어 볼까요?", "expect": "needs_decision", "patient_answer": "How much does it cost?"},
+  {"ko": "여기 누우세요.", "expect": "procedural"}
+ ]}

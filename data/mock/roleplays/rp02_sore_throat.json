@@ -1,0 +1,9 @@
+{"_label": "MOCK role-play. Simulated clinic. Korean needs native-speaker review.",
+ "id": "rp02_sore_throat", "case": "c02_sore_throat",
+ "turns": [
+  {"ko": "어디가 불편해서 오셨어요?", "expect": "on_card"},
+  {"ko": "알레르기 있는 약 있어요?", "expect": "on_card"},
+  {"ko": "지금 복용하시는 약 있으세요?", "expect": "needs_fact", "patient_answer": "ไม่มีค่ะ"},
+  {"ko": "입을 크게 벌려 보세요.", "expect": "procedural"},
+  {"ko": "주사 맞고 가실래요, 아니면 약만 드릴까요?", "expect": "needs_decision", "patient_answer": "ขอยาอย่างเดียวค่ะ"}
+ ]}

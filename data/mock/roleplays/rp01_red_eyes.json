@@ -1,0 +1,11 @@
+{"_label": "MOCK role-play. Simulated clinic. Korean needs native-speaker review.",
+ "id": "rp01_red_eyes", "case": "c01_red_eyes",
+ "turns": [
+  {"ko": "안녕하세요. 어떻게 오셨어요?", "expect": "on_card"},
+  {"ko": "언제부터 그랬어요?", "expect": "on_card"},
+  {"ko": "콘택트렌즈 끼세요?", "expect": "on_card"},
+  {"ko": "알레르기 있으세요?", "expect": "needs_fact", "patient_answer": "I don't know. I've never been tested."},
+  {"ko": "턱을 여기 올리시고 앞을 보세요.", "expect": "procedural"},
+  {"ko": "안약하고 연고 중에 어떤 걸로 드릴까요?", "expect": "needs_decision", "patient_answer": "Eye drops, please."},
+  {"ko": "렌즈는 당분간 끼지 마세요. 처방전 드릴 테니까 1층 약국에 가시면 돼요.", "expect": "procedural"}
+ ]}

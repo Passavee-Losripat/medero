@@ -1,0 +1,45 @@
+{"id":"u01","case":"c01_red_eyes","text_ko":"어떻게 오셨어요?","label":"on_card"}
+{"id":"u02","case":"c01_red_eyes","text_ko":"언제부터 눈이 빨개졌어요?","label":"on_card"}
+{"id":"u03","case":"c01_red_eyes","text_ko":"며칠 됐어요?","label":"on_card"}
+{"id":"u04","case":"c01_red_eyes","text_ko":"양쪽 다 그래요, 아니면 한쪽만요?","label":"on_card"}
+{"id":"u05","case":"c01_red_eyes","text_ko":"많이 아프세요, 아니면 가렵기만 해요?","label":"on_card"}
+{"id":"u06","case":"c01_red_eyes","text_ko":"안약 같은 거 넣어 보셨어요?","label":"on_card"}
+{"id":"u07","case":"c01_red_eyes","text_ko":"콘택트렌즈 끼세요?","label":"on_card"}
+{"id":"u08","case":"c01_red_eyes","text_ko":"지금 드시는 약 있어요?","label":"on_card"}
+{"id":"u09","case":"c01_red_eyes","text_ko":"알레르기 있으세요?","label":"needs_fact"}
+{"id":"u10","case":"c01_red_eyes","text_ko":"주변에 눈 빨간 사람 있어요? 가족이나 친구요.","label":"needs_fact"}
+{"id":"u11","case":"c01_red_eyes","text_ko":"시력이 떨어진 느낌은 없어요?","label":"needs_fact"}
+{"id":"u12","case":"c01_red_eyes","text_ko":"빛 볼 때 눈부셔요?","label":"needs_fact"}
+{"id":"u13","case":"c01_red_eyes","text_ko":"안약하고 연고 중에 어떤 걸로 드릴까요?","label":"needs_decision"}
+{"id":"u14","case":"c01_red_eyes","text_ko":"형광 염색 검사 한번 해 볼까요? 비용이 조금 추가돼요.","label":"needs_decision"}
+{"id":"u15","case":"c01_red_eyes","text_ko":"렌즈는 일주일 정도 쉬시는 게 좋은데, 괜찮으시겠어요?","label":"needs_decision"}
+{"id":"u16","case":"c01_red_eyes","text_ko":"수납은 카드로 하시겠어요, 현금으로 하시겠어요?","label":"needs_decision"}
+{"id":"u17","case":"c01_red_eyes","text_ko":"여기 앉으세요.","label":"procedural"}
+{"id":"u18","case":"c01_red_eyes","text_ko":"턱을 여기 올리시고 앞을 보세요.","label":"procedural"}
+{"id":"u19","case":"c01_red_eyes","text_ko":"위를 보세요. 이제 아래를 보세요.","label":"procedural"}
+{"id":"u20","case":"c01_red_eyes","text_ko":"처방전 드릴 테니까 1층 약국에 가시면 돼요.","label":"procedural"}
+{"id":"u21","case":"c01_red_eyes","text_ko":"밖에서 잠깐 기다려 주세요.","label":"procedural"}
+{"id":"u22","case":"c01_red_eyes","text_ko":"그 그러니까 음","label":"unclear"}
+{"id":"u23","case":"c01_red_eyes","text_ko":"아 네 그거는","label":"unclear"}
+{"id":"u24","case":"c02_sore_throat","text_ko":"알레르기 있는 약 있어요?","label":"on_card"}
+{"id":"u25","case":"c02_sore_throat","text_ko":"열은 언제부터 났어요?","label":"on_card"}
+{"id":"u26","case":"c02_sore_throat","text_ko":"지금 복용하시는 약 있으세요?","label":"needs_fact"}
+{"id":"u27","case":"c02_sore_throat","text_ko":"주사 맞고 가실래요, 아니면 약만 드릴까요?","label":"needs_decision"}
+{"id":"u28","case":"c02_sore_throat","text_ko":"입을 크게 벌려 보세요. 아 하세요.","label":"procedural"}
+{"id":"u29","case":"c03_ankle","text_ko":"어디를 다치셨어요?","label":"on_card"}
+{"id":"u30","case":"c03_ankle","text_ko":"엑스레이 찍어 볼까요?","label":"needs_decision"}
+{"id":"u31","case":"c03_ankle","text_ko":"전에도 이쪽 발목 다친 적 있어요?","label":"needs_fact"}
+{"id":"u32","case":"c03_ankle","text_ko":"반깁스 하실래요, 붕대만 감을까요?","label":"needs_decision"}
+{"id":"u33","case":"c03_ankle","text_ko":"여기 누우세요.","label":"procedural"}
+{"id":"u34","case":"c04_stomach","text_ko":"많이 아파요? 몇 점 정도요?","label":"needs_fact"}
+{"id":"u35","case":"c04_stomach","text_ko":"어제 뭐 드셨어요?","label":"needs_fact"}
+{"id":"u36","case":"c04_stomach","text_ko":"설사는 언제부터 했어요?","label":"on_card"}
+{"id":"u37","case":"c04_stomach","text_ko":"수액 맞고 가시겠어요?","label":"needs_decision"}
+{"id":"u38","case":"c06_headache","text_ko":"드시는 약 있어요?","label":"on_card"}
+{"id":"u39","case":"c06_headache","text_ko":"진통제 드셔 보셨어요?","label":"on_card"}
+{"id":"u40","case":"c06_headache","text_ko":"혹시 임신 가능성 있으세요?","label":"needs_fact"}
+{"id":"u41","case":"c07_cough","text_ko":"천식 있으셨어요?","label":"on_card"}
+{"id":"u42","case":"c07_cough","text_ko":"담배 피우세요?","label":"needs_fact"}
+{"id":"u43","case":"c07_cough","text_ko":"흉부 엑스레이 찍어 보는 게 어떠세요?","label":"needs_decision"}
+{"id":"u44","case":"c09_tooth","text_ko":"씹을 때 아파요?","label":"on_card"}
+{"id":"u45","case":"c09_tooth","text_ko":"오늘 신경 치료 시작할까요?","label":"needs_decision"}

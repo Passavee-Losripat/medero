@@ -155,6 +155,7 @@ _DOC_SYNONYMS: dict[str, list[str]] = {
     "alien_registration": ["alien registration", "외국인등록", "arc", "residence card"],
     "bankbook_copy": ["bankbook", "통장", "bank account"],
     "claim_form": ["claim form", "청구서", "application form"],
+    "passport": ["passport", "여권"],
 }
 
 
@@ -184,8 +185,9 @@ def compute_missing(required: list[str], captured: list[CapturedDoc], have: list
         got.add(k or h.lower())
     missing = []
     for r in required:
-        k = doc_key(r)
-        if (k and k in got) or r.lower() in got:
+        # "A or B" is satisfied by either alternative
+        alts = [r] + [a.strip() for a in r.split(" or ")] if " or " in r and "disease" not in r else [r]
+        if any((doc_key(a) and doc_key(a) in got) or a.lower() in got for a in alts):
             continue
         missing.append(r)
     return missing

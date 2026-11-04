@@ -1,0 +1,18 @@
+{"_label": "MOCK prescription labels. Drug names are INVENTED and marked (MOCK). Not real medicines.",
+ "slips": [
+  {"id": "rx01", "title": "약 봉투 (MOCK)", "patient": "Mali (MOCK)", "date": "2026-10-31",
+   "items": [
+    {"drug_name_ko": "루미아점안액(MOCK)", "dose": "1방울", "times_per_day": "1일 4회", "days": "5일분", "instructions_ko": "양쪽 눈에 넣으세요"},
+    {"drug_name_ko": "세레노정(MOCK)", "dose": "1정", "times_per_day": "1일 2회", "days": "5일분", "instructions_ko": "식후 30분"}
+   ]},
+  {"id": "rx02", "title": "약 봉투 (MOCK)", "patient": "Ploy (MOCK)", "date": "2026-11-01",
+   "items": [
+    {"drug_name_ko": "아로민캡슐(MOCK)", "dose": "1캡슐", "times_per_day": "1일 3회", "days": "3일분", "instructions_ko": "식후 30분"},
+    {"drug_name_ko": "피오나정(MOCK)", "dose": "1정", "times_per_day": "1일 1회", "days": "3일분", "instructions_ko": "취침 전"},
+    {"drug_name_ko": "솔렌시럽(MOCK)", "dose": "10mL", "times_per_day": "1일 3회", "days": "3일분", "instructions_ko": "식후"}
+   ]},
+  {"id": "rx03", "title": "약 봉투 (MOCK)", "patient": "Sam (MOCK)", "date": "2026-11-02",
+   "items": [
+    {"drug_name_ko": "카렌텍정(MOCK)", "dose": "1정", "times_per_day": "1일 3회", "days": "7일분", "instructions_ko": "식후 30분"}
+   ]}
+ ]}
