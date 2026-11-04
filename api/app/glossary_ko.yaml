@@ -1,0 +1,69 @@
+# Medero Korean glossary (guardrail 9).
+# Korean medical and document terms may come ONLY from this file.
+# STATUS: every entry is DRAFT and needs native-speaker review before real use
+# (tracked in docs/korean-review.md). reviewed: false means "not yet reviewed".
+#
+# Fields: key (stable id), en (English gloss), ko (Korean term), kind, reviewed.
+version: 1
+terms:
+  # --- body sites ---
+  - {key: eye, en: eye, ko: 눈, kind: body, reviewed: false}
+  - {key: eyes, en: both eyes, ko: 양쪽 눈, kind: body, reviewed: false}
+  - {key: head, en: head, ko: 머리, kind: body, reviewed: false}
+  - {key: throat, en: throat, ko: 목, kind: body, reviewed: false}
+  - {key: stomach, en: stomach, ko: 배, kind: body, reviewed: false}
+  - {key: chest, en: chest, ko: 가슴, kind: body, reviewed: false}
+  - {key: back, en: back, ko: 허리, kind: body, reviewed: false}
+  - {key: skin, en: skin, ko: 피부, kind: body, reviewed: false}
+  - {key: ear, en: ear, ko: 귀, kind: body, reviewed: false}
+  - {key: tooth, en: tooth, ko: 이, kind: body, reviewed: false}
+  # --- symptom words (descriptions the patient states; never diagnoses) ---
+  - {key: redness, en: redness, ko: 충혈, kind: symptom, reviewed: false}
+  - {key: itching, en: itching, ko: 가려움, kind: symptom, reviewed: false}
+  - {key: pain, en: pain, ko: 통증, kind: symptom, reviewed: false}
+  - {key: fever, en: fever, ko: 열, kind: symptom, reviewed: false}
+  - {key: cough, en: cough, ko: 기침, kind: symptom, reviewed: false}
+  - {key: discharge_eye, en: eye discharge, ko: 눈곱, kind: symptom, reviewed: false}
+  - {key: tearing, en: watery eyes, ko: 눈물, kind: symptom, reviewed: false}
+  - {key: blurred_vision, en: blurred vision, ko: 시야 흐림, kind: symptom, reviewed: false}
+  - {key: headache, en: headache, ko: 두통, kind: symptom, reviewed: false}
+  - {key: sore_throat, en: sore throat, ko: 인후통, kind: symptom, reviewed: false}
+  - {key: nausea, en: nausea, ko: 메스꺼움, kind: symptom, reviewed: false}
+  - {key: diarrhea, en: diarrhea, ko: 설사, kind: symptom, reviewed: false}
+  - {key: rash, en: rash, ko: 발진, kind: symptom, reviewed: false}
+  - {key: dizziness, en: dizziness, ko: 어지러움, kind: symptom, reviewed: false}
+  - {key: swelling, en: swelling, ko: 부기, kind: symptom, reviewed: false}
+  # --- intake fields ---
+  - {key: allergy, en: allergy, ko: 알레르기, kind: field, reviewed: false}
+  - {key: current_medication, en: current medication, ko: 복용 중인 약, kind: field, reviewed: false}
+  - {key: medical_history, en: medical history, ko: 병력, kind: field, reviewed: false}
+  - {key: contact_lens, en: contact lenses, ko: 콘택트렌즈, kind: field, reviewed: false}
+  - {key: eye_drops, en: eye drops, ko: 안약, kind: field, reviewed: false}
+  - {key: pain_reliever, en: pain reliever, ko: 진통제, kind: field, reviewed: false}
+  - {key: unknown, en: unknown, ko: 모름, kind: field, reviewed: false}
+  # --- prescription label words ---
+  - {key: times_per_day, en: times a day, ko: 1일 _회, kind: rx, reviewed: false}
+  - {key: after_meal, en: after meals, ko: 식후, kind: rx, reviewed: false}
+  - {key: before_meal, en: before meals, ko: 식전, kind: rx, reviewed: false}
+  - {key: after_meal_30, en: 30 minutes after meals, ko: 식후 30분, kind: rx, reviewed: false}
+  - {key: at_bedtime, en: at bedtime, ko: 취침 전, kind: rx, reviewed: false}
+  - {key: tablet, en: tablet, ko: 정, kind: rx, reviewed: false}
+  - {key: capsule, en: capsule, ko: 캡슐, kind: rx, reviewed: false}
+  - {key: drops_unit, en: drop(s), ko: 방울, kind: rx, reviewed: false}
+  - {key: days_supply, en: days, ko: 일분, kind: rx, reviewed: false}
+  - {key: dose, en: dose per time, ko: 1회 투약량, kind: rx, reviewed: false}
+  - {key: total_days, en: total days, ko: 총 투약일수, kind: rx, reviewed: false}
+  - {key: pharmacist, en: pharmacist, ko: 약사, kind: rx, reviewed: false}
+  # --- insurance / desk documents (CLAUDE.md section 7) ---
+  - {key: itemized_statement, en: itemized expense statement, ko: 진료비 세부내역서, kind: doc, reviewed: false}
+  - {key: receipt, en: medical fee receipt, ko: 진료비 영수증, kind: doc, reviewed: false}
+  - {key: disease_code, en: disease code, ko: 질병코드, kind: doc, reviewed: false}
+  - {key: disease_code_alt, en: disease code (classification), ko: 상병코드, kind: doc, reviewed: false}
+  - {key: pharmacy_receipt, en: pharmacy receipt, ko: 약제비 영수증, kind: doc, reviewed: false}
+  - {key: prescription_slip, en: prescription, ko: 처방전, kind: doc, reviewed: false}
+  - {key: diagnosis_certificate, en: medical certificate, ko: 진단서, kind: doc, reviewed: false}
+  - {key: medical_opinion, en: doctor's note, ko: 소견서, kind: doc, reviewed: false}
+  - {key: alien_registration, en: alien registration card, ko: 외국인등록증, kind: doc, reviewed: false}
+  - {key: bankbook_copy, en: bankbook copy, ko: 통장 사본, kind: doc, reviewed: false}
+  - {key: claim_form, en: claim form, ko: 보험금 청구서, kind: doc, reviewed: false}
+  - {key: nhis, en: national health insurance, ko: 국민건강보험, kind: doc, reviewed: false}

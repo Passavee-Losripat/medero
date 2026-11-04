@@ -1,0 +1,16 @@
+{
+  "_label": "MOCK – invented demo persona. Not a real patient.",
+  "patient_language": "en",
+  "alias": "Mali (MOCK)",
+  "chief_complaint": "Both eyes are red and itchy",
+  "onset": "Saturday morning, the day after swimming at an indoor pool",
+  "duration": "3 days",
+  "site": "both eyes, left one is worse",
+  "severity": "itching 6 out of 10, no strong pain",
+  "other_symptoms": ["watery eyes", "sticky discharge in the morning"],
+  "tried": ["artificial tears from a convenience store, 3 times a day"],
+  "history": ["wears soft contact lenses daily; stopped wearing them 2 days ago"],
+  "allergies": null,
+  "medications": "no regular medication",
+  "insurance_type": "travel"
+}
