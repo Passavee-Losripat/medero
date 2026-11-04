@@ -12,3 +12,8 @@ web/next-env.d.ts
 web/tsconfig.tsbuildinfo
 web/.env.local
 certs/
+
+# Never commit real documents or personal photos (CLAUDE.md: mock data only)
+*.HEIC
+*.heic
+private/
