@@ -1,7 +1,8 @@
 """Render MOCK prescription labels and receipts to PNG for the reader demo and eval.
 
-Uses Pillow and a local Korean system font (not redistributed; only the rendered
-MOCK images are). Every image carries a MOCK watermark. Run: make mock-docs
+Uses Pillow with SIL Open Font License fonts from Google Fonts: Noto Sans KR (print) and Nanum Pen Script
+(handwritten note). Run `make mock-docs`; it downloads the fonts into data/mock/.fonts (git-ignored) if missing.
+Every image carries a MOCK watermark.
 """
 
 from __future__ import annotations
@@ -14,15 +15,29 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = Path(__file__).resolve().parent
-FONT_CANDIDATES = [os.getenv("MOCK_FONT", ""), "/System/Library/Fonts/AppleSDGothicNeo.ttc",
-                   "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"]
+FONTS = HERE / ".fonts"
+FONT_URLS = {  # SIL OFL 1.1 (google/fonts)
+    "NotoSansKR.ttf": "https://github.com/google/fonts/raw/main/ofl/notosanskr/NotoSansKR%5Bwght%5D.ttf",
+    "NanumPenScript-Regular.ttf": "https://github.com/google/fonts/raw/main/ofl/nanumpenscript/NanumPenScript-Regular.ttf",
+}
+
+
+def _font_file(name: str) -> Path:
+    path = FONTS / name
+    if not path.exists():
+        import urllib.request
+        FONTS.mkdir(exist_ok=True)
+        urllib.request.urlretrieve(FONT_URLS[name], path)
+    return path
 
 
 def font(size: int) -> ImageFont.FreeTypeFont:
-    for p in FONT_CANDIDATES:
-        if p and Path(p).exists():
-            return ImageFont.truetype(p, size)
-    sys.exit("No Korean font found; set MOCK_FONT to a .ttf/.ttc path")
+    f = ImageFont.truetype(str(_font_file("NotoSansKR.ttf")), size)
+    try:
+        f.set_variation_by_axes([500])  # variable font: medium weight
+    except Exception:
+        pass
+    return f
 
 
 def watermark(img: Image.Image) -> None:
@@ -55,8 +70,7 @@ def render_slip(slip: dict, out: Path) -> None:
 
 
 def pen_font(size: int) -> ImageFont.FreeTypeFont:
-    p = "/System/Library/Fonts/Supplemental/AppleMyungjo.ttf"
-    return ImageFont.truetype(p, size) if Path(p).exists() else font(size)
+    return ImageFont.truetype(str(_font_file("NanumPenScript-Regular.ttf")), size + 8)
 
 
 def render_form(form: dict, out: Path) -> None:
@@ -122,9 +136,16 @@ def render_form(form: dict, out: Path) -> None:
         d.text((cols[4] + 22, yy), it["substitution"], font=font(25), fill=ink)
         d.text((cols[5] + 10, yy), it["instructions_ko"], font=font(23), fill=ink)
         if it.get("handwritten"):
-            note = Image.new("RGBA", (260, 50), (0, 0, 0, 0))
-            ImageDraw.Draw(note).text((0, 0), it["handwritten"], font=pen_font(30), fill=blue + (255,))
-            img.alpha_composite(note.rotate(4, expand=True), (cols[5] + 20, yy + 26))
+            # pen note beside its own line; the arrow comes from the print font (the pen font has no "→")
+            note = Image.new("RGBA", (200, 56), (0, 0, 0, 0))
+            nd = ImageDraw.Draw(note)
+            text = it["handwritten"]
+            x0 = 0
+            if text.startswith("→"):
+                nd.text((0, 10), "→", font=font(26), fill=blue + (255,))
+                x0, text = 30, text[1:]
+            nd.text((x0, 2), text, font=pen_font(30), fill=blue + (255,))
+            img.alpha_composite(note.rotate(3, expand=True), (cols[5] + 108, yy - 14))
     by = body_top + n_rows * row_h + 40
     d.rectangle([L, by, R, by + 70], outline=ink, width=2)
     d.text((L + 20, by + 20), f"사용기간   교부일로부터 (  {form['valid_days']}  )일간      사용기간 내에 약국에 제출하여야 합니다.",

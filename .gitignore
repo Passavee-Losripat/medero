@@ -19,3 +19,4 @@ certs/
 private/
 eval/results/offline/
 .env.tmp
+data/mock/.fonts/
