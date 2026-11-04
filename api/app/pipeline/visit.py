@@ -231,6 +231,8 @@ class VisitSession:
         pa = self.pending.pop(ask_id, None)
         if pa is None:
             return [{"type": "error", "code": "unknown_ask_id"}]
+        if term := detect_emergency(answer):
+            return [self._emergency_event(term, "patient")]
         return await self._relay(answer, pa.question_ko, pa.ask.question_patient_lang, ask_id, pa.turn_id)
 
     async def patient_say(self, text: str, asr_ms: float | None = None) -> list[Event]:
@@ -241,6 +243,9 @@ class VisitSession:
         if self.consent is not True:
             return [{"type": "error", "code": "consent_needed",
                      "text_patient": fx.patient_text("consent_needed", self._lang())}]
+        # the patient's own words are checked too: an emergency stops the visit before any relay
+        if term := detect_emergency(text):
+            return [self._emergency_event(term, "patient")]
         if self.pending:
             ask_id = list(self.pending)[-1]
             pa = self.pending.pop(ask_id)

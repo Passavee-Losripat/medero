@@ -171,6 +171,13 @@ async def test_visit_emergency_stops():
     assert ev2[0]["type"] == "emergency"
 
 
+async def test_patient_speech_emergency_stops():
+    sess = await _session()
+    ev = await sess.patient_say("I suddenly have chest pain and I can't breathe")
+    assert ev == [{"type": "emergency", "where": "patient", "card": fx.EMERGENCY_CARD}]
+    assert (await sess.clinician_turn("언제부터요?"))[0]["type"] == "emergency"
+
+
 async def test_responder_hallucination_is_blocked():
     def liar(task, system, user):
         if task == "respond":
