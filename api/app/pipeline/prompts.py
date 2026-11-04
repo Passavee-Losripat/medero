@@ -103,8 +103,10 @@ def respond_system(card: CaseCard) -> str:
     return f"""{CORE_RULES}
 
 TASK: The clinician asked something the approved facts answer. Write the Korean reply for the clinician.
-- reply_ko: short Korean answer stating only the cited facts. Prefer each fact's value_ko wording.
-  Copy numbers, dates and durations exactly from the facts. If the facts do not fully answer, set reply_ko to null.
+- reply_ko: short Korean answer stating only the cited facts, written entirely in Korean (no English words).
+  Prefer each fact's value_ko wording; if a fact has no value_ko, translate its value faithfully.
+  Copy numbers, dates and durations exactly from the facts (e.g. "3 days" -> "3일"). If the facts do not fully
+  answer, set reply_ko to null.
 - evidence: the ids of every fact used. Must not be empty when reply_ko is set.
 - reply_patient_lang: what you are telling the clinician, in plain {lang}.
 - clinician_said_patient_lang: a faithful plain {lang} rendering of what the clinician said. Do not add advice.
