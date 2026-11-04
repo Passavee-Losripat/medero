@@ -42,8 +42,8 @@ function Welcome() {
         </div>
         <div style={{ marginTop: 28 }}><Hero /></div>
       </div>
-      <div>
-        <div className="row" style={{ gap: 14 }}>
+      <div className="center">
+        <div className="row" style={{ gap: 14, justifyContent: "center" }}>
           <img src="/logo.png" alt="Medero logo" width={64} height={64} style={{ borderRadius: 16 }} />
           <h1 className="brand-big">Medero</h1>
         </div>

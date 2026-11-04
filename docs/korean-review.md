@@ -27,6 +27,8 @@ Nothing here has been reviewed yet. Mark each item ✅ with reviewer and date.
 - [ ] Role-plays in `data/mock/roleplays/`.
 - [ ] MOCK prescription label text in `data/mock/prescriptions/slips.json`.
 
+- [ ] Test-script lines in `docs/TEST_SCRIPT.md` section 4: 수술 동의하시겠어요? / 어제 뭐 드셨어요?
+
 ## Thai (patient side)
 
 - [ ] `web/lib/i18n.ts` (th), `fixed_text.py` PATIENT_TEXT["th"], emergency card Thai, Thai MOCK cases.

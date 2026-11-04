@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
+import Icon from "@/components/Icon";
 import { load, postForm } from "@/lib/api";
 import { t } from "@/lib/i18n";
 
@@ -19,19 +20,33 @@ export default function Prescription() {
     try { setRes(await postForm("/prescription", { file: f, lang })); }
     catch (e: any) { setErr(String(e.message || e)); } finally { setBusy(false); }
   }
+  async function trySample() {
+    // MOCK label bundled with the web app so a phone user can try it without the repo
+    const blob = await (await fetch("/samples/rx-mock.jpg")).blob();
+    onFile(new File([blob], "rx-mock.jpg", { type: "image/jpeg" }));
+  }
   return (
     <>
       <Header title={s.prescription} />
       <main className="stack narrow">
         <h1>{s.prescription}</h1>
         <div className="banner"><strong>{s.confirmPharmacist}.</strong> {s.notAdvice}</div>
-        <div className="card">
-          <label>{s.upload}</label>
-          <input type="file" accept="image/*" capture="environment" onChange={(e) => onFile(e.target.files?.[0])} />
-          <p className="muted">Sample MOCK labels: <code>data/mock/prescriptions/rx01.png</code></p>
+        <p className="muted" style={{ margin: 0 }}>{s.rxHow}</p>
+        <div className="pick">
+          <label className="btn dark">
+            <Icon name="camera" size={28} />{s.takePhoto}
+            <input type="file" accept="image/*" capture="environment" disabled={busy}
+              onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
+          </label>
+          <label className="btn">
+            <Icon name="image" size={28} />{s.fromLibrary}
+            <input type="file" accept="image/*" disabled={busy}
+              onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
+          </label>
         </div>
-        {preview && <img src={preview} alt="uploaded label" style={{ maxWidth: "100%", borderRadius: 12 }} />}
-        {busy && <p className="muted">…</p>}
+        <button className="ghost" style={{ alignSelf: "center" }} disabled={busy} onClick={trySample}>✨ {s.trySample}</button>
+        {preview && <img src={preview} alt="uploaded label" className="rx-preview" />}
+        {busy && <p className="muted center">{s.reading}</p>}
         {err && <div className="banner">{err}</div>}
         {res && (
           <div className="stack">
