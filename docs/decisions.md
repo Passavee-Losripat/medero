@@ -25,3 +25,6 @@ Short log. Newest last.
   file upload), `python-multipart` (FastAPI uploads), `websockets` (realtime ASR client), `Pillow`
   (dev only, renders MOCK images), `pytest-asyncio` (async tests).
 - **2026-11-04 – Patient UI languages: English and Thai.** Thai strings need native review.
+- **2026-11-04 – `Fact.answers_question`.** Facts confirmed in the visit store the clinician question they
+  answer. Reason: the eval audit flagged a correct relay of "ไม่มีค่ะ" (none) as unsupported because the
+  stored fact had no subject. The audit and the responder now see the question with the answer.

@@ -59,7 +59,29 @@ def main() -> None:
     for s in slips:
         out = HERE / "prescriptions" / f"{s['id']}.png"
         render_slip(s, out)
-        print("wrote", out.relative_to(HERE.parent.parent))
+        photo = HERE / "prescriptions" / f"{s['id']}_photo.jpg"
+        phone_photo(out, photo)
+        print("wrote", out.relative_to(HERE.parent.parent), "and", photo.name)
+
+
+
+
+def phone_photo(src: Path, out: Path, angle: float = -7, blur: float = 1.2) -> None:
+    """Simulate a hand-held phone photo of a MOCK label: tilt, perspective, blur, uneven light, JPEG."""
+    from PIL import ImageFilter, ImageEnhance
+
+    img = Image.open(src).convert("RGB")
+    w, h = img.size
+    bg = Image.new("RGB", (int(w * 1.35), int(h * 1.5)), (164, 150, 132))  # desk
+    bg.paste(img, ((bg.width - w) // 2, (bg.height - h) // 2))
+    bg = bg.rotate(angle, resample=Image.BICUBIC, fillcolor=(150, 138, 120))
+    dx = int(bg.width * 0.06)
+    bg = bg.transform(bg.size, Image.QUAD, (dx, 0, 0, bg.height, bg.width, bg.height, bg.width - dx // 2, 0),
+                      resample=Image.BICUBIC)
+    shade = Image.linear_gradient("L").resize(bg.size).rotate(35)
+    bg = Image.composite(bg, ImageEnhance.Brightness(bg).enhance(0.62), shade)
+    bg = bg.filter(ImageFilter.GaussianBlur(blur))
+    bg.save(out, "JPEG", quality=62)
 
 
 if __name__ == "__main__":

@@ -102,7 +102,10 @@ async def check_model(plan: ReplyPlan, card: CaseCard, provider: LLMProvider) ->
     for fid in plan.evidence:
         f = card.fact(fid)
         if f:
-            ev.append({"id": f.id, "value": f.value, "value_ko": f.value_ko})
+            item = {"id": f.id, "value": f.value, "value_ko": f.value_ko}
+            if f.answers_question:
+                item["answers_question"] = f.answers_question
+            ev.append(item)
     res = await provider.json(task="verify_reply", system=prompts.CHECK_SYSTEM,
                               user=prompts.check_user(plan.reply_ko or "", ev),
                               schema=prompts.CHECK_SCHEMA)

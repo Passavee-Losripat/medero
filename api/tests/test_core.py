@@ -224,3 +224,12 @@ async def test_patient_say_emergency():
 def test_is_korean():
     from app.main import is_korean
     assert is_korean("언제부터 그랬어요?") and not is_korean("I don't know") and not is_korean("ไม่ทราบค่ะ")
+
+
+async def test_confirmed_fact_keeps_question():
+    sess = await _session()
+    ev = await sess.clinician_turn("알레르기 있으세요?")
+    ask = [e for e in ev if e["type"] == "turn_result"][0]["ask_back"]
+    out = await sess.patient_answer(ask["id"], "none")
+    f = sess.card.fact(out[0]["fact_id"])
+    assert f.answers_question == "알레르기 있으세요?"

@@ -40,7 +40,10 @@ def glossary_block() -> str:
 def card_block(card: CaseCard) -> str:
     facts = []
     for f in card.speakable():
-        facts.append({"id": f.id, "value": f.value, "value_ko": f.value_ko})
+        item = {"id": f.id, "value": f.value, "value_ko": f.value_ko}
+        if f.answers_question:
+            item["answers_question"] = f.answers_question
+        facts.append(item)
     unknown = [f.id for f in card.all_facts() if not f.known]
     not_approved = [f.id for f in card.all_facts() if f.known and f not in card.speakable()]
     return (
@@ -209,6 +212,8 @@ CHECK_SCHEMA = {
 CHECK_SYSTEM = """You audit a Korean sentence said on behalf of a patient.
 Set unsupported=true if the sentence asserts ANY information about the patient that is not stated in the
 EVIDENCE facts (extra symptoms, numbers, negations such as 'no allergies', opinions, decisions, advice).
+A fact with answers_question is the patient's answer to that question; restating the answer in the
+question's terms (e.g. "none" to "any medicines?" -> "no medicines") is supported.
 Paraphrase and polite framing are fine. Output JSON only."""
 
 

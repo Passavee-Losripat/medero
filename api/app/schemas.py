@@ -28,6 +28,8 @@ class Fact(BaseModel):
     # Korean rendering made once at card approval (glossary terms only); used for the
     # fallback screen and as the only Korean the responder may build on. See docs/decisions.md.
     value_ko: str | None = None
+    # For facts confirmed during the visit: the question they answer, so "none" keeps its meaning.
+    answers_question: str | None = None
 
     @property
     def known(self) -> bool:

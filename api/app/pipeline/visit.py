@@ -61,7 +61,8 @@ class VisitSession:
         for i in ids:
             f = self.card.fact(i)
             if f:
-                out.append({"id": f.id, "value": f.value, "value_ko": f.value_ko})
+                out.append({"id": f.id, "value": f.value, "value_ko": f.value_ko,
+                            "answers_question": f.answers_question})
         return out
 
     def approved_facts_ko(self) -> list[dict]:
@@ -255,7 +256,8 @@ class VisitSession:
             return [self._emergency_event(term, "patient_answer")]
         t0 = time.perf_counter()
         fid = self._next_id("conf_")
-        fact = Fact(id=fid, value=answer.strip(), source="patient_confirmed_in_visit", approved=True)
+        fact = Fact(id=fid, value=answer.strip(), source="patient_confirmed_in_visit", approved=True,
+                    answers_question=(question_ko or question_patient or None))
         self.card.history.append(fact)  # stored with the card so later turns can cite it
         self.card.may_answer.append(fid)
         self.record.turns.append(Turn(id=self._next_id("p"), speaker="patient", korean_text="",
