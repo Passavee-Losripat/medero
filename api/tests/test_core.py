@@ -203,3 +203,24 @@ async def test_summary_only_doctor_speech():
     s = sess.summary()
     ids = {t["id"] for t in s["record"]["turns"] if t["speaker"] == "clinician"}
     assert s["record"]["doctor_said"] and all(st["source_turn_id"] in ids for st in s["record"]["doctor_said"])
+
+
+async def test_patient_say_relays_own_words_and_answers_open_question():
+    sess = await _session()
+    out = await sess.patient_say("My eyes hurt more at night")
+    assert out[0]["type"] == "relay_result" and out[0]["patient_text"] == "My eyes hurt more at night"
+    ev = await sess.clinician_turn("알레르기 있으세요?")
+    assert sess.pending
+    out = await sess.patient_say("I don't know")
+    assert out[0]["type"] == "relay_result" and not sess.pending
+
+
+async def test_patient_say_emergency():
+    sess = await _session()
+    out = await sess.patient_say("I can't breathe")
+    assert out[0]["type"] == "emergency"
+
+
+def test_is_korean():
+    from app.main import is_korean
+    assert is_korean("언제부터 그랬어요?") and not is_korean("I don't know") and not is_korean("ไม่ทราบค่ะ")

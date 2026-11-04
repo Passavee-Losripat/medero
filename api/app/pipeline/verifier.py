@@ -105,7 +105,7 @@ async def check_model(plan: ReplyPlan, card: CaseCard, provider: LLMProvider) ->
             ev.append({"id": f.id, "value": f.value, "value_ko": f.value_ko})
     res = await provider.json(task="verify_reply", system=prompts.CHECK_SYSTEM,
                               user=prompts.check_user(plan.reply_ko or "", ev),
-                              schema=prompts.CHECK_SCHEMA, effort="low")
+                              schema=prompts.CHECK_SCHEMA)
     if res.data is None:
         return Verdict(ok=False, reasons=[f"rule5_check_failed:{res.error}"], model_checked=True,
                        latency_ms=res.latency_ms)

@@ -33,6 +33,13 @@ MOCK = ROOT / "data" / "mock"
 EVAL_LATEST = ROOT / "eval" / "results" / "latest.md"
 MAX_UPLOAD = 8 * 1024 * 1024
 SESSION_TTL_S = 2 * 3600
+KEYWORDS = [t["ko"] for t in glossary()][:60]  # bias ASR toward reviewed clinic terms
+
+
+def is_korean(text: str) -> bool:
+    letters = [c for c in text if c.isalpha()]
+    hangul = [c for c in letters if "\uac00" <= c <= "\ud7a3"]
+    return bool(letters) and len(hangul) / len(letters) >= 0.4
 
 app = FastAPI(title="Medero API")
 settings = get_settings()
@@ -225,8 +232,8 @@ async def visit_ws(ws: WebSocket, sid: str):
                     if len(audio) > MAX_UPLOAD:
                         await ws.send_json({"type": "error", "code": "audio_too_large"})
                         continue
-                    tr = await asr.transcribe_file(audio, str(msg.get("mime") or "audio/webm"),
-                                                   keywords=[t["ko"] for t in glossary()][:50])
+                    tr = await asr.transcribe_file(audio, str(msg.get("mime") or "audio/wav"), keywords=KEYWORDS,
+                                                   language_bias=["Korean"])
                     del audio  # raw audio is never stored
                     if tr.error or not tr.text:
                         await ws.send_json({"type": "asr_failed", "error": tr.error,
@@ -235,6 +242,27 @@ async def visit_ws(ws: WebSocket, sid: str):
                         continue
                     await send_all(await sess.clinician_turn(tr.text, uncertain=tr.uncertain,
                                                              asr_ms=tr.latency_ms))
+                elif kind == "utterance":
+                    # Hands-free: one VAD-segmented WAV clip. Korean -> clinician turn, else the patient.
+                    audio = base64.b64decode(msg.get("data") or "")
+                    if len(audio) > MAX_UPLOAD:
+                        await ws.send_json({"type": "error", "code": "audio_too_large"})
+                        continue
+                    tr = await asr.transcribe_file(audio, keywords=KEYWORDS)
+                    del audio  # raw audio is never stored
+                    if tr.error or not tr.text:
+                        await ws.send_json({"type": "asr_failed", "error": tr.error, "silent": not tr.error,
+                                            "text_patient": fx.patient_text("transcript_uncertain",
+                                                                            sess.card.patient_language)})
+                        continue
+                    if is_korean(tr.text):
+                        await send_all(await sess.clinician_turn(tr.text, uncertain=tr.uncertain,
+                                                                 asr_ms=tr.latency_ms))
+                    else:
+                        await ws.send_json({"type": "patient_heard", "text": tr.text})
+                        await send_all(await sess.patient_say(tr.text, asr_ms=tr.latency_ms))
+                elif kind == "patient_text":
+                    await send_all(await sess.patient_say(str(msg.get("text") or "")))
                 elif kind == "answer":
                     await send_all(await sess.patient_answer(str(msg.get("ask_id")), str(msg.get("text") or "")))
                 elif kind == "summary":

@@ -71,7 +71,7 @@ async def render_korean(card: CaseCard, provider: LLMProvider) -> tuple[CaseCard
         return card, [], None
     res = await provider.json(task="card_ko", system=prompts.CARD_KO_SYSTEM,
                               user="FACTS:\n" + json.dumps(facts, ensure_ascii=False),
-                              schema=prompts.CARD_KO_SCHEMA, effort="low")
+                              schema=prompts.CARD_KO_SCHEMA)
     if res.data is None:
         return card, [], res.error or "card_ko_failed"
     untranslated: list[str] = []

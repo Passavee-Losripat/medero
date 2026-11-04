@@ -161,7 +161,7 @@ class VisitSession:
         card, user = self.card, prompts.turn_user(turn.korean_text, self._recent()[:-1])
         if cls == "on_card":
             res = await self.spark.json(task="respond", system=prompts.respond_system(card), user=user,
-                                        schema=prompts.RESPOND_SCHEMA, effort="low")
+                                        schema=prompts.RESPOND_SCHEMA)
             if res.data is None:
                 return None, "", res.error, res.latency_ms
             d = res.data
@@ -179,7 +179,7 @@ class VisitSession:
         if cls in ("needs_fact", "needs_decision"):
             kind = "decision" if cls == "needs_decision" else "fact"
             res = await self.spark.json(task="ask_back", system=prompts.askback_system(card, kind), user=user,
-                                        schema=prompts.ASKBACK_SCHEMA, effort="low")
+                                        schema=prompts.ASKBACK_SCHEMA)
             if res.data is None:
                 return None, "", res.error, res.latency_ms
             d = res.data
@@ -193,7 +193,7 @@ class VisitSession:
 
         # procedural / unclear: gloss only
         res = await self.spark.json(task="gloss", system=prompts.gloss_system(card), user=user,
-                                    schema=prompts.GLOSS_SCHEMA, effort="low")
+                                    schema=prompts.GLOSS_SCHEMA)
         gloss = str((res.data or {}).get("clinician_said_patient_lang") or "")
         if cls == "unclear":
             plan = ReplyPlan(turn_class="unclear", reply_ko=fx.REPEAT_KO,
@@ -230,6 +230,24 @@ class VisitSession:
         pa = self.pending.pop(ask_id, None)
         if pa is None:
             return [{"type": "error", "code": "unknown_ask_id"}]
+        return await self._relay(answer, pa.question_ko, pa.ask.question_patient_lang, ask_id, pa.turn_id)
+
+    async def patient_say(self, text: str, asr_ms: float | None = None) -> list[Event]:
+        """Patient speaks freely (hands-free). Answers the latest open question if there is one,
+        otherwise relays the patient's own words to the clinician. Nothing is added to them."""
+        if self.emergency:
+            return [{"type": "emergency", "where": "stopped", "card": fx.EMERGENCY_CARD}]
+        if self.consent is not True:
+            return [{"type": "error", "code": "consent_needed",
+                     "text_patient": fx.patient_text("consent_needed", self._lang())}]
+        if self.pending:
+            ask_id = list(self.pending)[-1]
+            return await self.patient_answer(ask_id, text)
+        last_ko = next((t.korean_text for t in reversed(self.record.turns) if t.speaker == "clinician"), "")
+        return await self._relay(text, last_ko, "", None, None, asr_ms=asr_ms)
+
+    async def _relay(self, answer: str, question_ko: str, question_patient: str, ask_id: str | None,
+                     turn_id: str | None, asr_ms: float | None = None) -> list[Event]:
         term = detect_emergency(answer)
         if term:
             return [self._emergency_event(term, "patient_answer")]
@@ -242,8 +260,8 @@ class VisitSession:
                                       patient_lang_text=answer.strip()))
 
         res = await self.spark.json(task="relay", system=prompts.relay_system(self.card),
-                                    user=prompts.relay_user(pa.question_ko, pa.ask.question_patient_lang, answer),
-                                    schema=prompts.RELAY_SCHEMA, effort="low")
+                                    user=prompts.relay_user(question_ko, question_patient, answer),
+                                    schema=prompts.RELAY_SCHEMA)
         reply_ko, reply_pl, blocked = None, "", None
         if res.data is not None:
             fact.value_ko = str(res.data.get("fact_value_ko") or "") or None
@@ -255,7 +273,7 @@ class VisitSession:
                 reply_ko, reply_pl = plan.reply_ko, plan.reply_patient_lang
             else:
                 blocked = {"reasons": v.reasons, "attempted_reply_ko": plan.reply_ko, "evidence": [fid]}
-                self.blocked_log.append({"turn_id": pa.turn_id, "class": "relay", **blocked})
+                self.blocked_log.append({"turn_id": turn_id, "class": "relay", **blocked})
         if reply_ko is None:
             # Show the patient's own words to staff rather than an unverified translation.
             fact.value_ko = None
@@ -265,7 +283,9 @@ class VisitSession:
                                       patient_lang_text=reply_pl))
         return [{"type": "relay_result", "ask_id": ask_id, "fact_id": fid, "reply_ko": reply_ko,
                  "reply_patient_lang": reply_pl, "blocked": blocked, "error": res.error,
-                 "latency_ms": {"respond": round(res.latency_ms, 1),
+                 "patient_text": answer.strip(),
+                 "latency_ms": {"transcribe": round(asr_ms, 1) if asr_ms is not None else None,
+                                "respond": round(res.latency_ms, 1),
                                 "total": round((time.perf_counter() - t0) * 1000, 1)}}]
 
     # ---------- summary ----------

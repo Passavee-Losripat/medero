@@ -58,7 +58,7 @@ TASK: Read a Korean prescription or medicine-bag label photo. Copy each printed 
 async def read_prescription(data: bytes, mime: str, lang: str, provider: LLMProvider) -> PrescriptionReading:
     res = await provider.json(task="read_prescription", system=rx_system(lang),
                               user=[{"type": "text", "text": "Read this label."}, image_part(data, mime)],
-                              schema=RX_SCHEMA, timeout_s=30, effort="low")
+                              schema=RX_SCHEMA, timeout_s=30)
     notice = fx.patient_text("pharmacist", lang)
     if res.data is None:
         return PrescriptionReading(items=[], low_confidence=True,
@@ -125,7 +125,7 @@ async def parse_checklist(provider: LLMProvider, *, text: str | None = None, dat
     user: object = f"INSURER TEXT:\n{text}" if data is None else [
         {"type": "text", "text": "Insurer checklist image:"}, image_part(data, mime or "image/png")]
     res = await provider.json(task="parse_checklist", system=CHECKLIST_SYSTEM, user=user,
-                              schema=CHECKLIST_SCHEMA, timeout_s=30, effort="low")
+                              schema=CHECKLIST_SCHEMA, timeout_s=30)
     if res.data is None:
         return None, [], res.error
     return res.data.get("insurer_name"), [str(d) for d in res.data.get("required_docs") or []], None
@@ -134,7 +134,7 @@ async def parse_checklist(provider: LLMProvider, *, text: str | None = None, dat
 async def capture_doc(data: bytes, mime: str, provider: LLMProvider) -> CapturedDoc:
     res = await provider.json(task="capture_doc", system=capture_system(),
                               user=[{"type": "text", "text": "Document photo:"}, image_part(data, mime)],
-                              schema=CAPTURE_SCHEMA, timeout_s=30, effort="low")
+                              schema=CAPTURE_SCHEMA, timeout_s=30)
     if res.data is None:
         return CapturedDoc(type="unreadable", confidence=0.0)
     try:

@@ -25,13 +25,14 @@ class Settings:
     model_api_key: str = field(default_factory=lambda: os.getenv("MODEL_API_KEY", ""))
     model_api_base: str = field(default_factory=lambda: os.getenv("MODEL_API_BASE", "https://api.meta.ai/v1"))
     spark_model: str = field(default_factory=lambda: os.getenv("SPARK_MODEL", "muse-spark-1.3"))
-    # VERIFY: whether the Meta API accepts reasoning_effort on chat completions. Empty = do not send.
-    reasoning_effort: str = field(default_factory=lambda: os.getenv("REASONING_EFFORT", "low"))
+    # VERIFIED 2026-11-04: Spark accepts minimal|low|medium|high|xhigh|max ("none" is rejected).
+    # minimal measured ~2.5 s median on muse-spark-1.3 for a short relay task.
+    reasoning_effort: str = field(default_factory=lambda: os.getenv("REASONING_EFFORT", "minimal"))
     asr_model: str = field(default_factory=lambda: os.getenv("ASR_MODEL", "muse-voice-transcribe-1.0"))
     asr_realtime_url: str = field(
         default_factory=lambda: os.getenv("ASR_REALTIME_URL", "wss://api.meta.ai/v1/asr/realtime"))
 
-    router_provider: str = field(default_factory=lambda: os.getenv("ROUTER_PROVIDER", "spark"))
+    router_provider: str = field(default_factory=lambda: os.getenv("ROUTER_PROVIDER", "rules"))
     local_llm_base: str = field(default_factory=lambda: os.getenv("LOCAL_LLM_BASE", "http://127.0.0.1:8080/v1"))
     local_llm_model: str = field(default_factory=lambda: os.getenv("LOCAL_LLM_MODEL", "muse-glimmer-q4"))
     modal_llm_base: str = field(default_factory=lambda: os.getenv("MODAL_LLM_BASE", ""))
@@ -39,9 +40,9 @@ class Settings:
     modal_llm_model: str = field(default_factory=lambda: os.getenv("MODAL_LLM_MODEL", "muse-glimmer"))
 
     llm_fake: bool = field(default_factory=lambda: _bool("LLM_FAKE", False))
-    model_timeout_s: float = field(default_factory=lambda: _float("MODEL_TIMEOUT_S", 8.0) or 8.0)
+    model_timeout_s: float = field(default_factory=lambda: _float("MODEL_TIMEOUT_S", 15.0) or 15.0)
     model_max_retries: int = field(default_factory=lambda: int(os.getenv("MODEL_MAX_RETRIES", "1")))
-    verifier_model_check: bool = field(default_factory=lambda: _bool("VERIFIER_MODEL_CHECK", True))
+    verifier_model_check: bool = field(default_factory=lambda: _bool("VERIFIER_MODEL_CHECK", False))
 
     demo_mode: bool = field(default_factory=lambda: _bool("DEMO_MODE", True))
     demo_rate_limit_per_min: int = field(default_factory=lambda: int(os.getenv("DEMO_RATE_LIMIT_PER_MIN", "30")))

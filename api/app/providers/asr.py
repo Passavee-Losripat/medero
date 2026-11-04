@@ -1,15 +1,15 @@
 """Muse Voice Transcribe adapters.
 
-VERIFY (CLAUDE.md section 4): the request/response formats below are NOT yet
-confirmed against Meta's docs. They are written to the OpenAI-style audio API
-shape and parse responses tolerantly. Check them on first run with a real key and
-record the result in docs/api-notes.md. Raw audio is never stored (guardrail 10).
+File endpoint: VERIFIED 2026-11-04 against the docs and a live call.
+Realtime adapter: still to be aligned with the documented handshake (authorization.accessToken
+in the first JSON frame); not used by the UI. Raw audio is never stored (guardrail 10).
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import re
 import time
 from dataclasses import dataclass
 from typing import AsyncIterator
@@ -48,33 +48,44 @@ def _low_confidence(payload: dict) -> bool:
     return False
 
 
-async def transcribe_file(audio: bytes, mime: str, *, language: str = "ko",
+async def transcribe_file(audio: bytes, mime: str = "audio/wav", *, language_bias: list[str] | None = None,
                           keywords: list[str] | None = None, s: Settings | None = None) -> Transcript:
-    """POST /v1/asr/transcribe (push-to-talk). Field names are VERIFY."""
+    """POST /v1/asr/transcribe (VERIFIED 2026-11-04, see docs/api-notes.md).
+
+    Multipart: `request` JSON part + `audio` part. Audio must be mono 16-bit PCM WAV at 16/24 kHz
+    (the browser encodes WAV itself). Omit languageBias to auto-detect (Korean vs patient language).
+    """
     s = s or get_settings()
     if s.use_fake:
         return Transcript(text="", final=True, latency_ms=0, uncertain=True, error="no_api_key")
     url = s.model_api_base.rstrip("/") + "/asr/transcribe"
-    ext = {"audio/webm": "webm", "audio/ogg": "ogg", "audio/wav": "wav", "audio/mp4": "m4a"}.get(
-        mime.split(";")[0], "webm")
-    data = {"model": s.asr_model, "language": language}
+    req: dict = {"model": s.asr_model, "audioEncoding": "WAV", "mode": "PUSH_TO_TALK"}
     if keywords:
-        data["keywords"] = ",".join(keywords)  # VERIFY: keyword biasing parameter name
+        req["keywords"] = keywords[:100]
+    if language_bias:
+        req["languageBias"] = language_bias
     t0 = time.perf_counter()
     try:
         async with httpx.AsyncClient(timeout=s.model_timeout_s * 2) as client:
             r = await client.post(url, headers={"Authorization": f"Bearer {s.model_api_key}"},
-                                  data=data, files={"file": (f"turn.{ext}", audio, mime)})
+                                  files={"request": (None, json.dumps(req), "application/json"),
+                                         "audio": ("turn.wav", audio, "audio/wav")})
         ms = (time.perf_counter() - t0) * 1000
         if r.status_code >= 400:
             return Transcript(text="", final=True, latency_ms=ms, uncertain=True,
                               error=f"http_{r.status_code}:{r.text[:200]}")
         payload = r.json()
-        text = _extract_text(payload).strip()
-        return Transcript(text=text, final=True, latency_ms=ms, uncertain=not text or _low_confidence(payload))
+        text = _clean(_extract_text(payload))
+        return Transcript(text=text, final=True, latency_ms=ms, uncertain=not text)
     except Exception as e:
         return Transcript(text="", final=True, latency_ms=(time.perf_counter() - t0) * 1000, uncertain=True,
                           error=f"{type(e).__name__}: {e}"[:200])
+
+
+def _clean(text: str) -> str:
+    # Observed: trailing punctuation noise such as "??!" or "?.," on short clips.
+    text = text.strip()
+    return re.sub(r"([?.!,]){2,}$", lambda m: m.group(0)[0], text)
 
 
 class RealtimeASR:

@@ -97,7 +97,7 @@ async def model_route(utterance: str, card: CaseCard, provider: LLMProvider) -> 
     res = await provider.json(
         task="route_turn", system=prompts.ROUTER_SYSTEM,
         user=prompts.router_user(utterance, ids, {i: fact_label(i) for i in ids}),
-        schema=prompts.ROUTER_SCHEMA, effort="low",
+        schema=prompts.ROUTER_SCHEMA,
     )
     is_api = provider.name in {"spark"}
     if res.data is None or res.data.get("turn_class") not in TURN_CLASSES:
