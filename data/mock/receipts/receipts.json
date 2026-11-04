@@ -1,0 +1,23 @@
+{"_label": "MOCK receipts for the insurance demo. Clinic, pharmacy, patient and amounts are INVENTED. Layout is generic; no real receipt copied.",
+ "receipts": [
+  {"id": "rc01_receipt", "title": "진료비 영수증", "subtitle": "(외래) MOCK", "org": "메데로안과의원(MOCK)",
+   "patient": "Mali (MOCK)", "date": "2026-10-31",
+   "lines": [["진찰료", "12,800"], ["검사료", "6,500"], ["처치 및 수술료", "0"]],
+   "extra": [["환자부담 총액", "15,300"], ["질병코드", ""]], "total": "15,300",
+   "expect": {"type": "medical fee receipt", "date": "2026-10-31", "amount": "15,300", "disease_code": null}},
+  {"id": "rc02_itemized", "title": "진료비 세부내역서", "subtitle": "MOCK", "org": "메데로안과의원(MOCK)",
+   "patient": "Mali (MOCK)", "date": "2026-10-31",
+   "lines": [["초진 진찰료", "12,800"], ["세극등현미경검사", "4,200"], ["안압측정", "2,300"]],
+   "extra": [["합계", "19,300"], ["환자부담 총액", "15,300"]], "total": "15,300",
+   "expect": {"type": "itemized expense statement", "date": "2026-10-31", "amount": "15,300", "disease_code": null}},
+  {"id": "rc03_pharmacy", "title": "약제비 영수증", "subtitle": "MOCK", "org": "누리약국(MOCK)",
+   "patient": "Mali (MOCK)", "date": "2026-10-31",
+   "lines": [["약제비 총액", "11,400"], ["보험자부담금", "3,400"]],
+   "extra": [["본인부담금", "8,000"]], "total": "8,000",
+   "expect": {"type": "pharmacy receipt", "date": "2026-10-31", "amount": "8,000", "disease_code": null}},
+  {"id": "rc04_cardslip", "title": "카드 매출전표", "subtitle": "(고객용) MOCK", "org": "누리약국(MOCK)",
+   "patient": null, "date": "2026-10-31",
+   "lines": [["카드번호", "0000-****-****-0000"], ["승인번호", "00000000"]],
+   "extra": [["합계", "8,000"]], "total": "8,000",
+   "expect": {"type": "card payment slip", "date": "2026-10-31", "amount": "8,000", "disease_code": null}}
+ ]}

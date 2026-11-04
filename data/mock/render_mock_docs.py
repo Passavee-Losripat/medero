@@ -155,6 +155,35 @@ def render_form(form: dict, out: Path) -> None:
     img.convert("RGB").save(out)
 
 
+def render_receipt(r: dict, out: Path) -> None:
+    """A generic MOCK receipt: title, issuer, patient, date, line items, totals."""
+    w = 900
+    rows = r["lines"] + r["extra"]
+    h = 420 + 64 * len(rows)
+    ink = (20, 20, 20)
+    img = Image.new("RGBA", (w, h), "white")
+    d = ImageDraw.Draw(img)
+    d.rectangle([14, 14, w - 14, h - 14], outline=ink, width=3)
+    d.text((w // 2, 60), r["title"], font=font(50), fill=ink, anchor="mm")
+    d.text((w // 2, 112), r["subtitle"], font=font(24), fill=ink, anchor="mm")
+    y = 160
+    for k, v in [("발행기관", r["org"]), ("환자 성명", r["patient"] or "—"), ("진료(조제)일", r["date"])]:
+        d.text((50, y), k, font=font(26), fill=(80, 80, 80))
+        d.text((300, y), v, font=font(28), fill=ink)
+        y += 48
+    d.line([40, y + 6, w - 40, y + 6], fill=ink, width=2)
+    y += 28
+    for i, (k, v) in enumerate(rows):
+        bold = i >= len(r["lines"])
+        d.text((50, y), k, font=font(30 if bold else 28), fill=ink)
+        d.text((w - 60, y), v + (" 원" if v and v[0].isdigit() and "-" not in v and "*" not in v else ""),
+               font=font(30 if bold else 28), fill=ink, anchor="ra")
+        y += 64
+    d.text((50, h - 60), "MOCK 샘플 · 실제 영수증 아님", font=font(22), fill=(200, 0, 0))
+    watermark(img)
+    img.convert("RGB").save(out)
+
+
 def main() -> None:
     slips = json.loads((HERE / "prescriptions" / "slips.json").read_text(encoding="utf-8"))["slips"]
     for s in slips:
@@ -162,6 +191,13 @@ def main() -> None:
         render_slip(s, out)
         photo = HERE / "prescriptions" / f"{s['id']}_photo.jpg"
         phone_photo(out, photo)
+        print("wrote", out.relative_to(HERE.parent.parent), "and", photo.name)
+    receipts = json.loads((HERE / "receipts" / "receipts.json").read_text(encoding="utf-8"))["receipts"]
+    for r in receipts:
+        out = HERE / "receipts" / f"{r['id']}.png"
+        render_receipt(r, out)
+        photo = HERE / "receipts" / f"{r['id']}_photo.jpg"
+        phone_photo(out, photo, angle=5, blur=0.8)
         print("wrote", out.relative_to(HERE.parent.parent), "and", photo.name)
     forms = json.loads((HERE / "prescriptions" / "forms.json").read_text(encoding="utf-8"))["forms"]
     for f in forms:

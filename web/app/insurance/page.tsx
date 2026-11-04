@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
+import Icon from "@/components/Icon";
 import { api, load, postForm, postJson } from "@/lib/api";
 import { t } from "@/lib/i18n";
 
@@ -33,6 +34,16 @@ export default function Insurance() {
     const d = await postForm("/insurance/capture", { file });
     setCaptured((c) => [...c, d]);
   });
+  const sample = async (path: string, type: string) =>
+    new File([await (await fetch(path)).blob()], path.split("/").pop() || "sample", { type });
+  // MOCK insurer checklist and receipts bundled with the web app, so the flow can be tried on a phone
+  const sampleChecklist = async () => parse(await sample("/samples/insurer-mock.pdf", "application/pdf"));
+  const sampleReceipts = () => run(async () => {
+    for (const f of ["rc01_receipt", "rc02_itemized", "rc03_pharmacy", "rc04_cardslip"]) {
+      const d = await postForm("/insurance/capture", { file: await sample(`/samples/${f}.jpg`, "image/jpeg") });
+      setCaptured((c) => [...c, d]);
+    }
+  });
   useEffect(() => {
     if (!checklist) return;
     postJson("/insurance/pack", { insurer_name: checklist.insurer_name, required_docs: checklist.required_docs, captured, have, lang })
@@ -51,7 +62,7 @@ export default function Insurance() {
           <input type="file" accept="application/pdf,image/*" onChange={(e) => parse(e.target.files?.[0])} />
           <textarea placeholder="Paste the insurer's text…" value={text} onChange={(e) => setText(e.target.value)} />
           <button disabled={busy || !text.trim()} onClick={() => parse()}>{s.parse}</button>
-          <p className="muted">MOCK samples: <code>data/mock/insurers/ins_a.txt</code>, <code>ins_b.txt</code></p>
+          <button className="ghost" style={{ alignSelf: "center" }} disabled={busy} onClick={sampleChecklist}>✨ {s.sampleChecklist}</button>
         </div>
         {checklist?.fake_models && <div className="banner">{s.fakeModels}</div>}
         {checklist?.error && <div className="banner">{checklist.error}</div>}
@@ -70,7 +81,15 @@ export default function Insurance() {
         {checklist && (
           <div className="card stack">
             <h2>{s.captureDocs}</h2>
-            <input type="file" accept="image/*" capture="environment" onChange={(e) => capture(e.target.files?.[0])} />
+            <div className="pick">
+              <label className="btn dark"><Icon name="camera" size={28} />{s.takePhoto}
+                <input type="file" accept="image/*" capture="environment" disabled={busy}
+                  onChange={(e) => { capture(e.target.files?.[0]); e.target.value = ""; }} /></label>
+              <label className="btn"><Icon name="image" size={28} />{s.fromLibrary}
+                <input type="file" accept="image/*" disabled={busy}
+                  onChange={(e) => { capture(e.target.files?.[0]); e.target.value = ""; }} /></label>
+            </div>
+            <button className="ghost" style={{ alignSelf: "center" }} disabled={busy} onClick={sampleReceipts}>✨ {s.sampleReceipts}</button>
             {captured.map((c, i) => (
               <div key={i} className="fact"><span className="badge">{c.type}</span>
                 <div className="grow muted">{[c.date, c.amount, c.disease_code].filter(Boolean).join(" · ") || "–"}
@@ -87,7 +106,7 @@ export default function Insurance() {
             <button onClick={() => navigator.clipboard?.writeText(pack.draft_message)}>{s.copy}</button>
           </div>
         )}
-        {busy && <p className="muted">…</p>}
+        {busy && <p className="muted center">{s.thinking}</p>}
         {err && <div className="banner">{err}</div>}
       </main>
     </>
