@@ -18,3 +18,4 @@ certs/
 *.heic
 private/
 eval/results/offline/
+.env.tmp
