@@ -68,16 +68,17 @@ the developer; Korean awaits native-speaker review. Full table: `eval/results/la
 
 | What | Result |
 |---|---|
-| Turn router accuracy, 45 labelled utterances | Spark 91.1% (p50 2.5 s) · offline rules 75.6% (0 ms, no API call) |
+| Turn router accuracy, 45 labelled utterances | Spark 93.3% (p50 2.3 s; 91.1% on an earlier run the same day) · offline rules 75.6% (0 ms, no API call) |
 | Decisions sent back to the patient (role-plays) | 3 / 3 |
-| Spoken replies flagged by an independent Spark audit | 1 / 12 (a relayed "no" that the auditor could not tie to the question; see below) |
-| Clinician turn to Korean reply, p50 / p95 (text input, rules router) | 5.0 s / 7.2 s |
-| Prescription fields, 3 MOCK labels | 30 / 30 exact match (clean rendered images) |
+| Spoken replies flagged by an independent Spark audit | 0 / 12 (1 / 12 before confirmed answers stored their question) |
+| Clinician turn to Korean reply, p50 / p95 (text input, rules router) | 4.6 s / 8.6 s |
+| Prescription fields, 3 MOCK labels | 30 / 30 on clean images · 30 / 30 on simulated phone photos (tilt, blur, shadow, JPEG) |
+| Insurer checklist from a MOCK PDF | 7 / 7 required documents extracted |
 | Missing insurance documents, 4 MOCK sets | 4 / 4 correct |
 
-Notes: the rules router never sent a "needs the patient" turn to the card (its errors all ask the patient);
-Spark sent 2 such turns to the card. The latency is above the 2.5 s target. One relay call hit the 15 s timeout
-and succeeded on retry.
+Notes: every rules-router error sends the turn to the patient (the safe direction); Spark sent 1 patient-only
+turn toward the card. Latency is above the 2.5 s target. Phone-photo and PDF results were measured through the
+live API (`/prescription`, `/insurance/checklist`), not by `make eval`.
 
 ## Privacy
 

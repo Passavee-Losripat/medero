@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-04T13:12:24+00:00",
+ "generated_at": "2026-11-04T13:20:59+00:00",
  "fake": false,
  "spark_model": "muse-spark-1.3",
  "router": [
@@ -300,21 +300,21 @@
   {
    "router": "spark",
    "n": 45,
-   "accuracy": 0.911,
+   "accuracy": 0.933,
    "per_class": {
     "on_card": 0.875,
-    "needs_fact": 0.8,
+    "needs_fact": 0.9,
     "needs_decision": 1.0,
     "procedural": 1.0,
     "unclear": 1.0
    },
-   "latency_p50_ms": 2464.7,
-   "latency_p95_ms": 6145.9,
+   "latency_p50_ms": 2331.3,
+   "latency_p95_ms": 7997.3,
    "api_calls": 45,
    "errors": 0,
    "confusion": {
     "on_card->needs_fact": 2,
-    "needs_fact->on_card": 2
+    "needs_fact->on_card": 1
    },
    "rows": [
     {
@@ -386,8 +386,8 @@
     {
      "id": "u12",
      "label": "needs_fact",
-     "pred": "on_card",
-     "ok": false
+     "pred": "needs_fact",
+     "ok": true
     },
     {
      "id": "u13",
@@ -597,37 +597,26 @@
    "decision_escalation": "3/3",
    "unsupported_claims_after_verifier": 0,
    "spoken_replies": 12,
-   "audit_flagged": 1,
+   "audit_flagged": 0,
    "audit_failed": 0,
-   "audit_rows": [
-    {
-     "turn": "ไม่มีค่ะ",
-     "reply_ko": "복용 중인 약 없습니다.",
-     "evidence": [
-      "conf_8"
-     ],
-     "reason": [
-      "rule5_unsupported:EVIDENCE only states '없음' with no subject; it does not state anything about medication. The sentence asserts 'no medicat"
-     ]
-    }
-   ],
+   "audit_rows": [],
    "replies_blocked_by_verifier": 0,
    "latency_ms": {
     "route": {
-     "p50": 0.0,
+     "p50": 0.1,
      "p95": 0.1
     },
     "respond": {
-     "p50": 4962.4,
-     "p95": 7216.8
+     "p50": 4549.7,
+     "p95": 8633.2
     },
     "verify": {
      "p50": 0.0,
      "p95": 0.2
     },
     "total": {
-     "p50": 4962.9,
-     "p95": 7217.6
+     "p50": 4550.6,
+     "p95": 8634.0
     }
    },
    "api_calls_per_visit_mean": 7.67
@@ -637,7 +626,7 @@
   "slips": 3,
   "fields": 30,
   "field_accuracy": 1.0,
-  "latency_p50_ms": 11390.1
+  "latency_p50_ms": 8816.2
  },
  "claims": {
   "sets": 4,
@@ -685,8 +674,8 @@
  },
  "meter": {
   "calls": 83,
-  "input_tokens": 43523,
-  "output_tokens": 24085,
+  "input_tokens": 44221,
+  "output_tokens": 23515,
   "est_cost_usd": null
  }
 }
