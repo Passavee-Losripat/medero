@@ -18,7 +18,7 @@ from pydantic import BaseModel
 
 from . import fixed_text as fx
 from .config import get_settings
-from .pipeline import documents, intake
+from .pipeline import documents, find, intake
 from .pipeline.visit import VisitSession, new_session
 from .providers import asr
 from .providers.llm import METER, doc_provider, router_provider, spark_provider
@@ -132,6 +132,12 @@ def demo_case():
 @app.get("/glossary")
 def get_glossary():
     return {"terms": glossary()}
+
+
+@app.get("/find")
+def find_place(q: str = "", lang: str = "en"):
+    """Department signboards to search for, from the patient's own words; map links only (no ranking)."""
+    return find.suggest(q[:300], lang)
 
 
 @app.get("/emergency")

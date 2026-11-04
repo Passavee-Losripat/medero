@@ -76,3 +76,19 @@ def test_before_leaving_only_for_claim_later_cover():
     assert fx.before_leaving("travel")["request_ko"] == fx.DISEASE_CODE_REQUEST_KO
     assert fx.before_leaving("unknown") is not None
     assert fx.before_leaving("nhis") is None and fx.before_leaving("none") is None
+
+
+def test_find_maps_body_part_to_department_never_ranks():
+    from app.pipeline.find import suggest
+    r = suggest("my eye hurts")
+    assert [d["ko"] for d in r["suggested"]] == ["안과"]
+    assert set(r["suggested"][0]["links"]) == {"naver", "kakao", "google"}
+    assert suggest("near the station")["suggested"] == []          # "ear" must not match inside "near"
+    assert suggest("หลังอาหาร")["suggested"] == []                   # "after meals", not back pain
+    assert suggest("아이가 열이 나요")["suggested"][0]["ko"] == "소아청소년과"
+    assert suggest("chest pain")["emergency"] is True
+
+
+def test_find_endpoint():
+    r = client.get("/find", params={"q": "twisted ankle", "lang": "th"}).json()
+    assert r["suggested"][0]["ko"] == "정형외과" and r["suggested"][0]["name"] == "กระดูกและข้อ"

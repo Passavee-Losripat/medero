@@ -5,7 +5,9 @@ export function apiBase(): string {
   const env = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/$/, "");
   if (typeof window === "undefined") return env || "http://localhost:8000";
   const pageHost = window.location.hostname;
-  if (env && !(/localhost|127\.0\.0\.1/.test(env) && pageHost !== "localhost" && pageHost !== "127.0.0.1")) return env;
+  const envLocal = /localhost|127\.0\.0\.1/.test(env);
+  // a local env base is only used as-is from a local page over the same scheme (dev HTTPS uses https://:8000)
+  if (env && !(envLocal && (pageHost !== "localhost" && pageHost !== "127.0.0.1" || !env.startsWith(window.location.protocol)))) return env;
   return `${window.location.protocol}//${pageHost}:8000`;
 }
 

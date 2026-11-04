@@ -119,10 +119,11 @@ function Home({ profile }: { profile: Profile }) {
           <strong>{s.tileIns}</strong><small>{s.tileInsSub}</small>
           <span className="go"><Icon name="arrow" size={18} /></span>
         </Link>
-        <div className="tile blush disabled" aria-disabled="true">
+        <Link className="tile blush" href={`/find${feeling.trim() ? `?q=${encodeURIComponent(feeling.trim())}` : ""}`}>
           <span className="tile-icon"><Icon name="map" /></span>
           <strong>{s.tileMap}</strong><small>{s.tileMapSub}</small>
-        </div>
+          <span className="go"><Icon name="arrow" size={18} /></span>
+        </Link>
       </div>
 
       <p className="muted center" style={{ marginTop: 26, fontSize: ".85rem" }}>

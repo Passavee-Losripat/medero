@@ -111,6 +111,7 @@ export default function Prescription() {
             ))}
             {!!res.untranslated_terms?.length && <div className="banner">{s.untranslated}: {res.untranslated_terms.join(", ")}</div>}
             <p><strong>{res.notice_patient_lang}</strong></p>
+            <a className="btn dark" href="/find?dept=pharmacy"><Icon name="map" size={18} /> {s.findPharmacy}</a>
           </div>
         )}
       </main>
