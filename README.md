@@ -73,8 +73,8 @@ patient uses an alias; ID-number, phone and email patterns are removed before an
 
 ## AI-assisted development
 
-This project was built with AI coding assistance (Claude Code). All design decisions, guardrails
-and scope come from the developer; the code was reviewed and tested by the developer.
+This project was built with AI coding assistance (Claude Code). The product design, guardrails
+and scope are the developer's, written in `CLAUDE.md` before coding started.
 
 ## License and third parties
 
