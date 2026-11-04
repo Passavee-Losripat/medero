@@ -69,6 +69,18 @@ PATIENT_TEXT: dict[str, dict[str, str]] = {
 }
 
 
+# Covers where the patient pays first and claims later; "unknown" too, since the patient may not know yet.
+CLAIM_LATER = {"travel", "private", "school_group", "unknown"}
+
+
+def before_leaving(insurance_type: str) -> dict | None:
+    """Fixed reminder at the end of a visit: the patient may choose to ask for claim paperwork
+    while still at the desk. Shown, never sent; no coverage is predicted."""
+    if insurance_type not in CLAIM_LATER:
+        return None
+    return {"request_ko": DISEASE_CODE_REQUEST_KO, "insurance_type": insurance_type}
+
+
 def patient_text(key: str, lang: str) -> str:
     table = PATIENT_TEXT.get(lang.split("-")[0], PATIENT_TEXT["en"])
     return table.get(key) or PATIENT_TEXT["en"][key]

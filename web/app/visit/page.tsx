@@ -7,6 +7,8 @@ import EmergencyCard from "@/components/EmergencyCard";
 import Icon from "@/components/Icon";
 import { load, wsUrl } from "@/lib/api";
 import { HandsFree } from "@/lib/audio";
+import SpeakButton from "@/components/SpeakButton";
+import { canSpeak, setSpeakHooks, speakKo, stopSpeaking, unlockSpeech } from "@/lib/speech";
 import { t } from "@/lib/i18n";
 
 type Ev = Record<string, any>;
@@ -34,6 +36,20 @@ export default function Visit() {
   const ws = useRef<WebSocket | null>(null);
   const hf = useRef<HandsFree | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
+  const [voice, setVoice] = useState(false);
+  const voiceRef = useRef(false);   // read inside the socket handler, which keeps the first render's closure
+  const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    // while the phone speaks Korean, hands-free listening pauses so the reply is not heard as the doctor
+    setSpeakHooks({
+      start: () => { if (resumeTimer.current) clearTimeout(resumeTimer.current); if (hf.current) hf.current.paused = true; },
+      end: () => { resumeTimer.current = setTimeout(() => { if (hf.current) hf.current.paused = false; }, 500); },
+    });
+    const on = canSpeak();
+    setVoice(on); voiceRef.current = on;
+    return () => { setSpeakHooks({}); stopSpeaking(); };
+  }, []);
 
   useEffect(() => {
     setLang(load("lang") || "en");
@@ -59,10 +75,11 @@ export default function Visit() {
       case "patient_heard": setItems((x) => [...x, { kind: "you", text: e.text }]); break;
       case "turn_result":
         done(); setLast(e);
+        if (voiceRef.current && e.reply_ko) speakKo(e.reply_ko);
         setItems((x) => [...x, { kind: "result", ...e }]);
         setAsk(e.ask_back ? { ...e.ask_back, said: e.clinician_said_patient_lang } : null);
         break;
-      case "relay_result": done(); setAsk(null); setItems((x) => [...x, { kind: "relay", ...e }]); break;
+      case "relay_result": done(); setAsk(null); if (voiceRef.current && e.reply_ko) speakKo(e.reply_ko); setItems((x) => [...x, { kind: "relay", ...e }]); break;
       case "fallback": setItems((x) => [...x, { kind: "fallback", ...e }]); break;
       case "notice": setItems((x) => [...x, { kind: "note", text: e.text_patient }]); break;
       case "asr_failed": done(); if (!e.silent) setItems((x) => [...x, { kind: "note", text: e.text_patient }]); break;
@@ -73,7 +90,18 @@ export default function Visit() {
   const send = (m: Ev) => { if (ws.current?.readyState === 1) { ws.current.send(JSON.stringify(m)); return true; } return false; };
   const s = t(lang);
 
+  function toggleVoice() {
+    const on = !voice;
+    setVoice(on); voiceRef.current = on;
+    if (on) unlockSpeech(); else stopSpeaking();
+  }
+  function consentTap(accepted: boolean) {
+    unlockSpeech();
+    send({ type: "consent", accepted });
+  }
+
   async function toggleListen() {
+    unlockSpeech();
     if (hf.current?.running) { hf.current.stop(); hf.current = null; setPhase("off"); setLevel(0); return; }
     const h = new HandsFree({
       onUtterance: (b64) => { if (send({ type: "utterance", data: b64 })) setPending((n) => n + 1); },
@@ -116,10 +144,11 @@ export default function Visit() {
       <div className="card stack" style={{ background: "var(--mint)", padding: 24 }}>
         <span className="badge" style={{ background: "var(--surface)" }}>AI · Medero</span>
         <p className="ko-big" lang="ko" style={{ margin: 0 }}>{consent && !consent.accepted ? consent.text_ko : disclosure || "…"}</p>
+        {disclosure && <div><SpeakButton text={consent && !consent.accepted ? consent.text_ko : disclosure} label={s.speakKo} /></div>}
         {consent && !consent.accepted ? <p>{consent.text_patient}</p> : (
           <div className="row" style={{ flexWrap: "nowrap" }}>
-            <button className="dark big" lang="ko" disabled={!disclosure} onClick={() => send({ type: "consent", accepted: true })}>네, 괜찮아요</button>
-            <button className="big" lang="ko" disabled={!disclosure} onClick={() => send({ type: "consent", accepted: false })}>아니요</button>
+            <button className="dark big" lang="ko" disabled={!disclosure} onClick={() => consentTap(true)}>네, 괜찮아요</button>
+            <button className="big" lang="ko" disabled={!disclosure} onClick={() => consentTap(false)}>아니요</button>
           </div>
         )}
       </div>
@@ -135,6 +164,7 @@ export default function Visit() {
         <span className="title">{s.tileVisit}</span>
         <div className="row" style={{ gap: 8, flexWrap: "nowrap" }}>
           <button className={`icon-btn ${big ? "on" : ""}`} onClick={() => setBig(!big)} aria-label={s.bigText}><span lang="ko" style={{ fontWeight: 800 }}>가</span></button>
+          <button className={`icon-btn ${voice ? "on" : ""}`} onClick={toggleVoice} aria-label={s.voiceToggle} aria-pressed={voice}><Icon name={voice ? "speaker" : "mute"} /></button>
           <button className={`icon-btn ${hood ? "on" : ""}`} onClick={() => setHood(!hood)} aria-label={s.hood}><Icon name="info" /></button>
         </div>
       </div>
@@ -212,6 +242,7 @@ function Bubble({ it, s }: { it: Ev; s: ReturnType<typeof t> }) {
           <div className="who">Medero · {s.toldDoctor}
             {it.evidence?.length > 0 && <span className="badge" style={{ background: "var(--surface)" }}>✓ {s.fromCard}</span>}
             {it.blocked && <span className="badge warn">verifier</span>}
+            <SpeakButton small text={it.reply_ko} label={s.speakKo} />
           </div>
           <div className="ko-big" lang="ko">{it.reply_ko}</div>
           {it.reply_patient_lang && <div className="muted" style={{ marginTop: 4 }}>{it.reply_patient_lang}</div>}
@@ -224,7 +255,7 @@ function Bubble({ it, s }: { it: Ev; s: ReturnType<typeof t> }) {
   );
   if (it.kind === "relay") return (
     <div className="msg medero fade-in">
-      <div className="who">Medero · {s.toldDoctor}{it.blocked && <span className="badge warn">your own words</span>}</div>
+      <div className="who">Medero · {s.toldDoctor}{it.blocked && <span className="badge warn">your own words</span>}<SpeakButton small text={it.reply_ko} label={s.speakKo} /></div>
       <div className="ko-big" lang="ko">{it.reply_ko}</div>
       {it.reply_patient_lang && <div className="muted" style={{ marginTop: 4 }}>{it.reply_patient_lang}</div>}
     </div>

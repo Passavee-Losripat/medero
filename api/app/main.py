@@ -184,7 +184,7 @@ async def approve_card(sid: str, body: Approval):
 def read_session(sid: str):
     sess = get_session(sid)
     return {"card": sess.card.model_dump(), "consent": sess.consent, "emergency": sess.emergency,
-            "summary": sess.summary()}
+            "summary": sess.summary(), "before_leaving": fx.before_leaving(sess.card.insurance_type)}
 
 
 @app.delete("/sessions/{sid}")

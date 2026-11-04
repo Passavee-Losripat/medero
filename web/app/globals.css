@@ -100,6 +100,7 @@ button.big, .btn.big { width: 100%; padding: 16px 22px; font-size: 1.08rem; min-
 .pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .pick label.btn { margin: 0; flex-direction: column; gap: 6px; min-height: 96px; border-radius: 20px; font-weight: 700; }
 .pick input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.icon-btn.speak { width: 32px; height: 32px; min-height: 32px; margin-left: auto; box-shadow: none; background: var(--surface); }
 .rx-cols { display: grid; grid-template-columns: repeat(3, auto) 1fr; gap: 8px; }
 .rx-cols span { background: var(--bg); border-radius: 12px; padding: 8px 10px; font-weight: 700; font-size: 1.1rem; }
 .rx-cols small { display: block; font-weight: 500; font-size: .72rem; color: var(--muted); }

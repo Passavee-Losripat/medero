@@ -28,3 +28,14 @@ Short log. Newest last.
 - **2026-11-04 – `Fact.answers_question`.** Facts confirmed in the visit store the clinician question they
   answer. Reason: the eval audit flagged a correct relay of "ไม่มีค่ะ" (none) as unsupported because the
   stored fact had no subject. The audit and the responder now see the question with the answer.
+- **2026-11-05 – Clinic prescription form (처방전) support.** Layout studied from the developer's own form
+  (the photo is not in the repo and was never sent to a model). MOCK forms reproduce the layout with invented
+  data. Patient notes (valid-for days, pharmacy keeps the copy, disease-code box blank) are fixed text built
+  from printed fields; nothing is inferred.
+- **2026-11-05 – Disease-code reminder.** For travel / private / school cover (and unknown), the after-visit
+  screen and the prescription reader show a fixed Korean request the patient may choose to show staff. It is
+  never sent and does not predict coverage. Reason: a blank 질병분류기호 box is a common reason a claim
+  later needs extra paperwork.
+- **2026-11-05 – Korean speech output via the browser's Web Speech API.** Muse has no TTS. The phone's
+  built-in ko-KR voice is on-device, free, needs no new dependency, and stores no audio. On-screen large Korean
+  text stays the primary output; speech is a toggle. Hands-free listening pauses while speaking.

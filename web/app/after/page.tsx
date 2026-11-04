@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Icon from "@/components/Icon";
+import SpeakButton from "@/components/SpeakButton";
 import { api, load } from "@/lib/api";
 import { t } from "@/lib/i18n";
 
@@ -12,13 +13,15 @@ export default function After() {
   const router = useRouter();
   const [lang, setLang] = useState("en");
   const [summary, setSummary] = useState<any>(null);
+  const [leaving, setLeaving] = useState<any>(null);
+  const [bigKo, setBigKo] = useState(false);
   const [done, setDone] = useState<Record<string, boolean>>({});
   const [err, setErr] = useState("");
   useEffect(() => {
     setLang(load("lang") || "en");
     const sid = load("sid");
     if (!sid) return;
-    api(`/sessions/${sid}`).then((r) => setSummary(r.summary)).catch((e) => setErr(String(e.message || e)));
+    api(`/sessions/${sid}`).then((r) => { setSummary(r.summary); setLeaving(r.before_leaving); }).catch((e) => setErr(String(e.message || e)));
   }, []);
   const s = t(lang);
   const tick = (k: string) => setDone({ ...done, [k]: !done[k] });
@@ -45,10 +48,28 @@ export default function After() {
         </div>
         {err && <div className="banner">{err}</div>}
 
+        {leaving && !done.delete && (
+          <div className="card stack" style={{ background: "var(--butter-soft, #fff7e0)" }}>
+            <h3 style={{ margin: 0 }}>🧾 {s.beforeLeaving}</h3>
+            <p style={{ margin: 0 }}>{s.beforeLeavingHelp}</p>
+            <div className={bigKo ? "ko-big" : "ko"} lang="ko" style={{ fontWeight: 650 }}>{leaving.request_ko}</div>
+            <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+              <button className="ghost" onClick={() => setBigKo(!bigKo)}>가 {s.bigForStaff}</button>
+              <SpeakButton text={leaving.request_ko} label={s.speakKo} />
+            </div>
+            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>{s.yourChoice}</p>
+          </div>
+        )}
+
         <h2>✅ Checklist</h2>
         <button className={`check ${done.summary ? "done" : ""}`} onClick={() => tick("summary")}>
           <span className="box">{done.summary && <Icon name="check" size={18} />}</span><span className="label">{s.checkSummary}</span>
         </button>
+        {leaving && (
+          <button className={`check ${done.code ? "done" : ""}`} onClick={() => tick("code")}>
+            <span className="box">{done.code && <Icon name="check" size={18} />}</span><span className="label">{s.checkCode}</span>
+          </button>
+        )}
         <Link className={`check ${done.rx ? "done" : ""}`} href="/prescription" onClick={() => tick("rx")}>
           <span className="box">{done.rx && <Icon name="check" size={18} />}</span><span className="label grow">{s.checkPharmacy}</span><Icon name="arrow" />
         </Link>

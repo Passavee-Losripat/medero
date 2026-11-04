@@ -69,3 +69,10 @@ def test_insurance_pack_missing_and_card_slip():
     body = r.json()
     assert body["missing"] == ["pharmacy receipt (card slips not accepted)"]
     assert "[your full name]" in body["draft_message"]
+
+
+def test_before_leaving_only_for_claim_later_cover():
+    from app import fixed_text as fx
+    assert fx.before_leaving("travel")["request_ko"] == fx.DISEASE_CODE_REQUEST_KO
+    assert fx.before_leaving("unknown") is not None
+    assert fx.before_leaving("nhis") is None and fx.before_leaving("none") is None

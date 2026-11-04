@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Icon from "@/components/Icon";
+import SpeakButton from "@/components/SpeakButton";
 import { load, postForm } from "@/lib/api";
 import { t } from "@/lib/i18n";
 
@@ -60,7 +61,10 @@ export default function Prescription() {
               <div className="card stack" style={{ margin: 0 }}>
                 <div className="muted">{s.codeRequest}</div>
                 <div className={bigKo ? "ko-big" : "ko"} lang="ko" style={{ fontWeight: 650 }}>{res.request_ko}</div>
-                <button className="ghost" style={{ alignSelf: "flex-start" }} onClick={() => setBigKo(!bigKo)}>가 {s.bigForStaff}</button>
+                <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+                  <button className="ghost" onClick={() => setBigKo(!bigKo)}>가 {s.bigForStaff}</button>
+                  <SpeakButton text={res.request_ko} label={s.speakKo} />
+                </div>
               </div>
             )}
             {res.items.map((it: any, i: number) => (
