@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Header from "@/components/Header";
 import Icon from "@/components/Icon";
 import RedactEditor from "@/components/RedactEditor";
@@ -14,25 +14,41 @@ export default function Prescription() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [bigKo, setBigKo] = useState(false);
-  const [localReader, setLocalReader] = useState<boolean | null>(null);
+  // Private reader = Muse Glimmer on our own GPU. It scales to zero, so it may be waking up (~1 min).
+  const [priv, setPriv] = useState<{ configured: boolean; ready: boolean } | null>(null);
   const [toCover, setToCover] = useState<File | null>(null);
+  const [warmNote, setWarmNote] = useState(false);
+  const privRef = useRef(priv);
+  privRef.current = priv;
   useEffect(() => {
     setLang(load("lang") || "en");
-    // documents are read on our own server when DOC_PROVIDER is local/modal; otherwise cover identifiers first
-    api("/health").then((h) => setLocalReader(h.doc_reader === "local" || h.doc_reader === "modal")).catch(() => setLocalReader(false));
+    let tries = 0, stop = false;
+    const poll = () => api("/reader/status").then((r) => {
+      if (stop) return;
+      setPriv({ configured: r.private_configured, ready: r.private_ready });
+      // the status call itself wakes the GPU; check again for up to ~2 minutes
+      if (r.private_configured && !r.private_ready && ++tries < 12) setTimeout(poll, 10000);
+    }).catch(() => setPriv({ configured: false, ready: false }));
+    poll();
+    return () => { stop = true; };
   }, []);
   const s = t(lang);
 
   function onFile(f: File | undefined) {
     if (!f) return;
-    setRes(null); setErr("");
-    if (localReader) upload(f); else { setPreview(null); setToCover(f); }
+    setRes(null); setErr(""); setWarmNote(false);
+    if (privRef.current?.ready) upload(f, false);
+    else { setPreview(null); setWarmNote(!!privRef.current?.configured); setToCover(f); }
   }
-  async function upload(f: File) {
+  async function upload(f: File, cloud: boolean) {
     setToCover(null);
     setPreview(URL.createObjectURL(f)); setBusy(true); setErr(""); setRes(null);
-    try { setRes(await postForm("/prescription", { file: f, lang })); }
-    catch (e: any) { setErr(String(e.message || e)); } finally { setBusy(false); }
+    try { setRes(await postForm("/prescription", { file: f, lang, cloud: cloud ? "true" : "false" })); }
+    catch (e: any) {
+      if (String(e.message).includes("private_reader_warming")) {  // went to sleep meanwhile: cover, then cloud
+        setPriv((p) => p && { ...p, ready: false }); setPreview(null); setWarmNote(true); setToCover(f);
+      } else setErr(String(e.message || e));
+    } finally { setBusy(false); }
   }
   async function trySample() {
     // MOCK label bundled with the web app so a phone user can try it without the repo
@@ -59,8 +75,14 @@ export default function Prescription() {
           </label>
         </div>
         <button className="ghost" style={{ alignSelf: "center" }} disabled={busy} onClick={trySample}>✨ {s.trySample}</button>
+        {priv?.configured && (
+          <div className="row" style={{ gap: 6 }}>
+            <span className={`badge ${priv.ready ? "" : "warn"}`}>🔒 {priv.ready ? s.privReady : s.privWaking}</span>
+          </div>
+        )}
+        {toCover && warmNote && <div className="banner">{s.privWakingCover}</div>}
         {toCover && (
-          <RedactEditor file={toCover} onDone={upload} onCancel={() => setToCover(null)}
+          <RedactEditor file={toCover} onDone={(f) => upload(f, true)} onCancel={() => setToCover(null)}
             labels={{ title: s.coverTitle, help: s.coverHelp, reset: s.coverReset, send: s.coverSend, cancel: s.cancel }} />
         )}
         {preview && <img src={preview} alt="uploaded label" className="rx-preview" />}

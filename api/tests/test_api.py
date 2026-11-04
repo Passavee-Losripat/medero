@@ -110,3 +110,20 @@ async def test_find_model_fallback_only_when_keywords_miss():
     bad = await suggest_with_model("I can't see clearly", "en",
                                    FakeProvider(handler=lambda *a: {"department": "You have glaucoma"}))
     assert bad["suggested"] == []                      # anything outside the fixed list is dropped
+
+
+def test_private_reader_down_never_falls_back_silently(monkeypatch):
+    from app.config import reset_settings
+    monkeypatch.setenv("DOC_PROVIDER", "modal")
+    monkeypatch.setenv("MODAL_LLM_BASE", "http://127.0.0.1:9/v1")   # nothing listens here
+    monkeypatch.setenv("MODEL_API_KEY", "test-key-not-used")
+    reset_settings()
+    try:
+        assert client.get("/reader/status").json() == {"private_configured": True, "private_ready": False}
+        r = client.post("/prescription", files={"file": ("x.jpg", b"x", "image/jpeg")}, data={"lang": "en"})
+        assert r.status_code == 503 and r.json()["detail"] == "private_reader_warming"
+        r = client.post("/insurance/capture", files={"file": ("x.jpg", b"x", "image/jpeg")})
+        assert r.status_code == 503
+    finally:
+        monkeypatch.undo()
+        reset_settings()

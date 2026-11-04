@@ -306,10 +306,37 @@ async def _read_upload(f: UploadFile) -> tuple[bytes, str]:
     return data, f.content_type or "application/octet-stream"
 
 
+async def _private_reader_ready(timeout_s: float = 4.0) -> bool:
+    """Is the self-hosted Glimmer up? A scaled-to-zero Modal container makes this call hang while it boots,
+    so a short timeout means "warming up" (and the call itself starts the boot)."""
+    s = get_settings()
+    if s.doc_provider not in ("local", "modal"):
+        return False
+    base = (s.modal_llm_base if s.doc_provider == "modal" else s.local_llm_base).rstrip("/")
+    base = base[:-3] if base.endswith("/v1") else base
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=timeout_s) as c:
+            r = await c.get(f"{base}/health")
+            return r.status_code == 200
+    except Exception:
+        return False
+
+
+@app.get("/reader/status")
+async def reader_status():
+    s = get_settings()
+    private = s.doc_provider in ("local", "modal")
+    return {"private_configured": private, "private_ready": await _private_reader_ready() if private else False}
+
+
 @app.post("/prescription")
-async def prescription(file: UploadFile = File(...), lang: str = Form("en")):
+async def prescription(file: UploadFile = File(...), lang: str = Form("en"), cloud: bool = Form(False)):
+    """cloud=true only after the phone covered the name/ID area (private reader warming up or not configured)."""
     data, mime = await _read_upload(file)
-    prov = doc_provider()
+    prov = spark_provider() if cloud else doc_provider()
+    if not cloud and getattr(prov, "local", False) and not await _private_reader_ready():
+        raise HTTPException(503, "private_reader_warming")
     reading = await documents.read_prescription(data, mime, lang, prov)
     return {**reading.model_dump(), "fake_models": get_settings().use_fake, "reader": _reader(prov)}
 
@@ -334,6 +361,9 @@ async def insurance_checklist(file: UploadFile | None = File(None), text: str | 
 async def insurance_capture(file: UploadFile = File(...)):
     data, mime = await _read_upload(file)
     prov = doc_provider()
+    if getattr(prov, "local", False) and not await _private_reader_ready():
+        # receipts carry the patient's name: never fall back to a cloud reader silently
+        raise HTTPException(503, "private_reader_warming")
     doc = await documents.capture_doc(data, mime, prov)
     return {**doc.model_dump(), "fake_models": get_settings().use_fake, "reader": _reader(prov)}
 

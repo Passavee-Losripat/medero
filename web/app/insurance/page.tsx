@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
-import { load, postForm, postJson } from "@/lib/api";
+import { api, load, postForm, postJson } from "@/lib/api";
 import { t } from "@/lib/i18n";
 
 type Doc = { type: string; date?: string | null; amount?: string | null; disease_code?: string | null; confidence?: number };
@@ -15,12 +15,18 @@ export default function Insurance() {
   const [pack, setPack] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  useEffect(() => setLang(load("lang") || "en"), []);
+  useEffect(() => {
+    setLang(load("lang") || "en");
+    api("/reader/status").catch(() => {});  // wakes the private reader before the first receipt photo
+  }, []);
   const s = t(lang);
 
   async function run<T>(fn: () => Promise<T>) {
     setBusy(true); setErr("");
-    try { return await fn(); } catch (e: any) { setErr(String(e.message || e)); } finally { setBusy(false); }
+    try { return await fn(); } catch (e: any) {
+      const m = String(e.message || e);
+      setErr(m.includes("private_reader_warming") ? s.privWakingRetry : m);
+    } finally { setBusy(false); }
   }
   const parse = (file?: File) => run(async () => setChecklist(await postForm("/insurance/checklist", file ? { file } : { text })));
   const capture = (file?: File) => file && run(async () => {
