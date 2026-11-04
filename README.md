@@ -17,11 +17,18 @@ documents together.
 
 Built solo for the **Meta Global AI Developer Hackathon** (Indie Developer track, "Build for Your World").
 
-**Demo video (3 min):** https://youtu.be/zWgPUIo8Y0A
+<p align="center">
+  <a href="https://youtu.be/zWgPUIo8Y0A" title="Watch the Medero demo on YouTube">
+    <img src="https://img.youtube.com/vi/zWgPUIo8Y0A/maxresdefault.jpg" width="720" alt="Medero demo video: click to watch on YouTube">
+  </a>
+  <br><sub>▶ <a href="https://youtu.be/zWgPUIo8Y0A">Watch the 3-minute demo on YouTube</a></sub>
+</p>
 
 **Try it:** **https://medero-pi.vercel.app** on a phone · one-tap demo persona (MOCK): **https://medero-pi.vercel.app/?demo=1**
 
 - Demo limits are on (per-IP rate limit and a daily call cap). All data is MOCK; please don't enter real health data.
+- The demo runs on hackathon free credits, under which Meta may use API content for product improvement, so please
+  use mock data only. (Photos with a name or ID are read by Muse Glimmer on our own GPU, not by the Meta API.)
 - The private document reader (Muse Glimmer on our own GPU) sleeps when idle; the first photo after a quiet
   period may take about a minute, or you can cover your name and use the cloud reader straight away.
 - Microphone needs permission; you can also type the doctor's lines (keyboard button in the visit).
