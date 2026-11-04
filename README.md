@@ -11,6 +11,13 @@ documents together.
 
 Built solo for the **Meta Global AI Developer Hackathon** (Indie Developer track, "Build for Your World").
 
+**Try it:** **https://medero-pi.vercel.app** on a phone · one-tap demo persona (MOCK): **https://medero-pi.vercel.app/?demo=1**
+
+- Demo limits are on (per-IP rate limit and a daily call cap). All data is MOCK; please don't enter real health data.
+- The private document reader (Muse Glimmer on our own GPU) sleeps when idle; the first photo after a quiet
+  period may take about a minute, or you can cover your name and use the cloud reader straight away.
+- Microphone needs permission; you can also type the doctor's lines (keyboard button in the visit).
+
 ## Meta models used
 
 | Model | Where it runs | What it does in Medero |
