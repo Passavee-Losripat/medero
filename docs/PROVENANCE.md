@@ -8,7 +8,7 @@ Git history is the detailed record; first commit: 2026-11-04 KST.
 
 | Date (KST) | Work |
 |---|---|
-| 2026-11-04 | Repo scaffold, CLAUDE.md rules |
+| 2026-11-04 | Repo scaffold, design rules |
 | 2026-11-04 | Backend: schemas, glossary, fixed guardrail text, emergency detection, router (rules + model), verifier, visit pipeline, intake, prescription reader, insurance claim pack, FastAPI app with WebSocket visit and DEMO_MODE limits, fake provider, tests |
 | 2026-11-04 | MOCK data: 10 cases, 45 labelled utterances, 3 role-plays, prescriptions, insurer checklists, receipt sets; eval harness |
 | 2026-11-04 | Web PWA: intake, case card, visit, prescription, insurance, results |

@@ -1,4 +1,4 @@
-"""Data contracts for Medero (CLAUDE.md section 5).
+"""Data contracts for Medero.
 
 Every model output is parsed into one of these. If parsing fails, the caller
 falls back to asking the patient.

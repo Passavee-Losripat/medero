@@ -54,7 +54,7 @@ terms:
   - {key: dose, en: dose per time, ko: 1회 투약량, kind: rx, reviewed: false}
   - {key: total_days, en: total days, ko: 총 투약일수, kind: rx, reviewed: false}
   - {key: pharmacist, en: pharmacist, ko: 약사, kind: rx, reviewed: false}
-  # --- insurance / desk documents (CLAUDE.md section 7) ---
+  # --- insurance / desk documents ---
   - {key: itemized_statement, en: itemized expense statement, ko: 진료비 세부내역서, kind: doc, reviewed: false}
   - {key: receipt, en: medical fee receipt, ko: 진료비 영수증, kind: doc, reviewed: false}
   - {key: disease_code, en: disease code, ko: 질병코드, kind: doc, reviewed: false}

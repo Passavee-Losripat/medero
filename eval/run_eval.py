@@ -1,4 +1,4 @@
-"""Medero evaluation harness (CLAUDE.md section 8).
+"""Medero evaluation harness.
 
 Writes eval/results/latest.md and eval/results/latest.json. All data is MOCK.
 Only measured numbers are written. Sections that need a model are skipped (and say

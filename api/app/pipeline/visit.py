@@ -1,6 +1,6 @@
 """Visit orchestrator: one clinician turn in, a list of client events out.
 
-Flow per turn (CLAUDE.md section 6): emergency check -> route -> respond / ask-back / gloss
+Flow per turn: emergency check -> route -> respond / ask-back / gloss
 -> verify -> events. Any model failure falls back to asking the patient.
 """
 

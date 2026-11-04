@@ -13,7 +13,7 @@ web/tsconfig.tsbuildinfo
 web/.env.local
 certs/
 
-# Never commit real documents or personal photos (CLAUDE.md: mock data only)
+# Never commit real documents or personal photos (mock data only)
 *.HEIC
 *.heic
 private/
@@ -26,3 +26,9 @@ web/.next-build/
 video/motion-standalone.html
 video/.audio/
 video/out/
+
+# development-only files: kept locally, never published
+/CLAUDE.md
+docs/DEMO.md
+docs/TEST_SCRIPT.md
+video/

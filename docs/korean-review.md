@@ -15,7 +15,7 @@ Nothing here has been reviewed yet. Mark each item ✅ with reviewer and date.
 
 ## Glossary (`api/app/glossary_ko.yaml`)
 
-- [ ] All 60 entries (each has `reviewed: false`). Desk document terms from CLAUDE.md section 7 first.
+- [ ] All 60 entries (each has `reviewed: false`). Desk document terms first.
 
 ## Router cues and emergency keywords
 
@@ -27,7 +27,7 @@ Nothing here has been reviewed yet. Mark each item ✅ with reviewer and date.
 - [ ] Role-plays in `data/mock/roleplays/`.
 - [ ] MOCK prescription label text in `data/mock/prescriptions/slips.json`.
 
-- [ ] Test-script lines in `docs/TEST_SCRIPT.md` section 4: 수술 동의하시겠어요? / 어제 뭐 드셨어요?
+- [ ] Test lines: 수술 동의하시겠어요? / 어제 뭐 드셨어요?
 
 - [ ] `fixed_text.py` DISEASE_CODE_REQUEST_KO (asks staff to write the disease code and issue receipt + itemized statement).
 - [ ] MOCK prescription forms `data/mock/prescriptions/forms.json` (column headers and 용법 lines).

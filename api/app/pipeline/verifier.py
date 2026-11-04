@@ -1,4 +1,4 @@
-"""Verifier (CLAUDE.md section 5): deterministic rules first, optional model check second."""
+"""Verifier: deterministic rules first, optional model check second."""
 
 from __future__ import annotations
 

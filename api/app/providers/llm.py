@@ -5,7 +5,7 @@
 - FakeProvider: deterministic, no network. Used by tests and by the UI when no
   key is set. Its outputs are labelled FAKE and are never reported as results.
 
-Every call has a timeout, a retry limit and a logged latency (CLAUDE.md section 11).
+Every call has a timeout, a retry limit and a logged latency.
 """
 
 from __future__ import annotations

@@ -108,7 +108,7 @@ make eval-offline          # rules baseline + claim matcher only
 
 Glimmer: `bash scripts/modal_setup.sh` deploys it on Modal (weights `meta-models/Muse-Glimmer-30B-GGUF`,
 Apache-2.0); `make glimmer` runs it on a Mac with llama.cpp >= b10353. Then set `DOC_PROVIDER=modal|local`
-and/or `ROUTER_PROVIDER=modal|local`. Phone testing over HTTPS on the LAN: `make phone` (see `docs/TEST_SCRIPT.md`).
+and/or `ROUTER_PROVIDER=modal|local`. Phone testing over HTTPS on the LAN: `make phone`.
 
 ## Results
 
@@ -166,7 +166,7 @@ covers the name/ID area (solid fill on the device, adjustable by the patient), s
 
 Medero was built with **Claude Code** (Anthropic) as an AI coding assistant: it wrote much of the code, tests,
 mock data and docs under the developer's direction. The product idea, the guardrails, the scope and every
-decision are the developer's, written down in `CLAUDE.md` before coding started and kept as the source of
+decision are the developer's, written down in a design document before coding started and kept as the source of
 truth throughout. The logo was made with ChatGPT (see `THIRD_PARTY.md`). No Anthropic or OpenAI model is part
 of Medero's runtime; the app runs on Meta models only.
 
