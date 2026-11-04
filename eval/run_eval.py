@@ -56,11 +56,26 @@ def pct(xs: list[float], q: float) -> float | None:
 # ---------------- router accuracy ----------------
 
 
+async def warm_up(provider, max_s: float = 900) -> float | None:
+    """Wait for a self-hosted model to finish loading (Modal scales to zero), so a cold start is not
+    counted as an error or as latency. Returns the seconds waited, or None if it never came up."""
+    t0 = time.perf_counter()
+    while time.perf_counter() - t0 < max_s:
+        r = await provider.json(task="warm_up", system="Reply with JSON.", user='Return {"ok": true}.',
+                                schema={"type": "object", "properties": {"ok": {"type": "boolean"}}})
+        if r.data is not None:
+            return round(time.perf_counter() - t0, 1)
+        await asyncio.sleep(15)
+    return None
+
+
 async def eval_router(name: str, cases: dict, utts: list[dict]) -> dict:
     s = get_settings()
     if name == "spark" and s.use_fake:
         return {"router": name, "skipped": "no MODEL_API_KEY"}
     provider = router_provider(s, name)
+    if name in ("local", "modal") and await warm_up(provider) is None:
+        return {"router": name, "skipped": "self-hosted model did not come up"}
     cards = {cid: card_for(c) for cid, c in cases.items()}
     correct, lat, conf = 0, [], Counter()
     per_class = defaultdict(lambda: [0, 0])
@@ -182,6 +197,8 @@ async def eval_rx(reader: str = "spark") -> dict:
     if reader == "spark" and s.use_fake:
         return {"skipped": "no MODEL_API_KEY"}
     provider = spark_provider(s) if reader == "spark" else glimmer_provider(s, reader)
+    if reader != "spark" and await warm_up(provider) is None:
+        return {"skipped": "self-hosted model did not come up"}
     rx = MOCK / "prescriptions"
     slips = json.loads((rx / "slips.json").read_text(encoding="utf-8"))["slips"]
     forms = json.loads((rx / "forms.json").read_text(encoding="utf-8"))["forms"]
