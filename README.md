@@ -1,4 +1,10 @@
-# Medero
+<p align="center">
+  <img src="web/public/logo.png" width="128" alt="Medero logo">
+</p>
+
+<h1 align="center">Medero</h1>
+
+<p align="center"><b>Healthcare without language barriers.</b></p>
 
 **A medical companion for people who don't speak the local language.** Medero speaks to a Korean
 clinic for the patient, using only facts the patient approved on a "case card". It sends decisions
