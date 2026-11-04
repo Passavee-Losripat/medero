@@ -97,6 +97,9 @@ def default_handler(task: str, system: str, user: Any) -> dict | None:
                 "issued_date": "2026-10-31", "valid_days": "3", "disease_code": None,
                 "disease_code_box": "blank", "untranslated_terms": []}
 
+    if task == "find_department":
+        return {"department": "eye"}
+
     if task == "parse_checklist":
         return {"insurer_name": f"{TAG} Mock insurer", "required_docs": [
             "claim form", "medical fee receipt", "itemized expense statement", "pharmacy receipt"]}

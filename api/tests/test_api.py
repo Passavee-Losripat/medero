@@ -92,3 +92,21 @@ def test_find_maps_body_part_to_department_never_ranks():
 def test_find_endpoint():
     r = client.get("/find", params={"q": "twisted ankle", "lang": "th"}).json()
     assert r["suggested"][0]["ko"] == "정형외과" and r["suggested"][0]["name"] == "กระดูกและข้อ"
+
+
+async def test_find_model_fallback_only_when_keywords_miss():
+    from app.pipeline.find import suggest_with_model
+    from app.providers.llm import FakeProvider
+    calls = []
+
+    def h(task, system, user):
+        calls.append(task)
+        return {"department": "eye"}
+
+    r = await suggest_with_model("my eye hurts", "en", FakeProvider(handler=h))
+    assert r["source"] == "keywords" and calls == []
+    r = await suggest_with_model("I can't see clearly", "en", FakeProvider(handler=h))
+    assert r["source"].startswith("model:") and r["suggested"][0]["ko"] == "안과"
+    bad = await suggest_with_model("I can't see clearly", "en",
+                                   FakeProvider(handler=lambda *a: {"department": "You have glaucoma"}))
+    assert bad["suggested"] == []                      # anything outside the fixed list is dropped

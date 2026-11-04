@@ -40,6 +40,8 @@ class Settings:
     # Who reads photos of documents (prescriptions, receipts) that can carry names and ID numbers.
     # "local" keeps them on infrastructure we run (Glimmer on this machine, or our Modal endpoint).
     doc_provider: str = field(default_factory=lambda: os.getenv("DOC_PROVIDER", "spark"))
+    # Backup classifier for the department finder when no keyword matches: modal | local | none
+    find_provider: str = field(default_factory=lambda: os.getenv("FIND_PROVIDER", "modal"))
     local_timeout_s: float = field(default_factory=lambda: _float("LOCAL_TIMEOUT_S", 120.0) or 120.0)
     modal_llm_base: str = field(default_factory=lambda: os.getenv("MODAL_LLM_BASE", ""))
     modal_llm_key: str = field(default_factory=lambda: os.getenv("MODAL_LLM_KEY", ""))

@@ -9,7 +9,7 @@ import { api, load } from "@/lib/api";
 import { t } from "@/lib/i18n";
 
 type Dept = { id: string; ko: string; name: string; links: Record<"naver" | "kakao" | "google", string> };
-type Res = { emergency: boolean; card?: any; suggested?: Dept[]; all?: Dept[]; matched?: string[] };
+type Res = { emergency: boolean; card?: any; suggested?: Dept[]; all?: Dept[]; matched?: string[]; source?: string };
 
 export default function Find() {
   const [lang, setLang] = useState("en");
@@ -32,7 +32,7 @@ export default function Find() {
 
   async function run(text: string, l = lang) {
     setErr("");
-    try { setRes(await api(`/find?q=${encodeURIComponent(text)}&lang=${l}`)); }
+    try { setRes(await api(`/find?q=${encodeURIComponent(text)}&lang=${l}&model=1`)); }
     catch (e: any) { setErr(String(e.message || e)); }
   }
 
@@ -52,6 +52,7 @@ export default function Find() {
 
         {suggested.length > 0 && <h2 style={{ marginBottom: 0 }}>{s.lookFor}</h2>}
         {suggested.map((d) => <DeptCard key={d.id} d={d} s={s} highlight />)}
+        {res?.source?.startsWith("model") && <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>✨ {s.byModel}</p>}
         {res && suggested.length === 0 && <div className="card flat" style={{ margin: 0 }}>{s.findNoMatch}</div>}
 
         <button className="ghost" onClick={() => setShowAll(!showAll)}>{showAll ? "▲" : "▼"} {s.allDepts}</button>

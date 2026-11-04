@@ -21,7 +21,7 @@ from .config import get_settings
 from .pipeline import documents, find, intake
 from .pipeline.visit import VisitSession, new_session
 from .providers import asr
-from .providers.llm import METER, doc_provider, router_provider, spark_provider
+from .providers.llm import METER, doc_provider, glimmer_provider, router_provider, spark_provider
 from .safety import glossary
 from .schemas import CapturedDoc, IntakeAnswers
 
@@ -135,9 +135,14 @@ def get_glossary():
 
 
 @app.get("/find")
-def find_place(q: str = "", lang: str = "en"):
+async def find_place(q: str = "", lang: str = "en", model: bool = False):
     """Department signboards to search for, from the patient's own words; map links only (no ranking)."""
-    return find.suggest(q[:300], lang)
+    s = get_settings()
+    prov = None
+    # model=1 only for finished text (not live typing), so keystrokes never keep a GPU awake
+    if model and (s.find_provider == "modal" and s.modal_llm_base or s.find_provider == "local"):
+        prov = glimmer_provider(s, s.find_provider)
+    return await find.suggest_with_model(intake.scrub(q[:300]) or "", lang, prov)
 
 
 @app.get("/emergency")

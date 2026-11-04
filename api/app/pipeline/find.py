@@ -68,6 +68,30 @@ def _public(d: dict, lang: str) -> dict:
     return {"id": d["id"], "ko": d["ko"], "name": name, "links": map_links(d["ko"])}
 
 
+FIND_SCHEMA = {"type": "object",
+               "properties": {"department": {"type": "string", "enum": [d["id"] for d in DEPARTMENTS] + ["unsure"]}},
+               "required": ["department"]}
+FIND_SYSTEM = """You help a patient in Korea find which clinic signboard (department) to look for.
+Read the patient's own words and choose ONE department id from the enum, or "unsure".
+Choose by the body part or the kind of help asked for. Never name or guess a condition. Output JSON only."""
+
+
+async def suggest_with_model(text: str, lang: str, provider) -> dict:
+    """Keywords first (instant). Only when nothing matches, a constrained model call may pick one id
+    from the fixed list; it cannot return free text, so it cannot name a condition."""
+    out = suggest(text, lang)
+    out["source"] = "keywords"
+    if out["emergency"] or out["suggested"] or provider is None or len((text or "").strip()) < 4:
+        return out
+    res = await provider.json(task="find_department", system=FIND_SYSTEM,
+                              user=f"PATIENT SAID: {text[:300]}", schema=FIND_SCHEMA, timeout_s=20)
+    dep = (res.data or {}).get("department")
+    if dep in _BY_ID:
+        out["suggested"] = [_public(_BY_ID[dep], lang)]
+        out["source"] = f"model:{provider.model}"
+    return out
+
+
 def suggest(text: str, lang: str = "en") -> dict:
     """Departments whose keywords appear in the patient's own words. Empty if nothing matches."""
     term = detect_emergency(text or "")

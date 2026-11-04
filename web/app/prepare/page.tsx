@@ -96,7 +96,7 @@ export default function Prepare() {
             </label>
           ))}
         </div>
-        <WhereToGo text={[feeling, site].filter(Boolean).join(" ")} lang={profile.lang} title={s.whereToGo} />
+        <WhereToGo text={[feeling, site].filter(Boolean).join(" ")} lang={profile.lang} title={s.whereToGo} model />
         {err && <div className="banner">{err}</div>}
         <button className="dark big cta" disabled={busy} onClick={approve}>
           {busy ? s.thinking : s.startTalking}<span className="arrow"><Icon name="arrow" /></span>
