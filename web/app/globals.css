@@ -249,8 +249,17 @@ button.big, .btn.big { width: 100%; padding: 16px 22px; font-size: 1.08rem; min-
 .brand-big { font-size: 3.2rem; font-weight: 850; letter-spacing: -.03em; margin: 0; }
 .tagline span:nth-child(1) { color: var(--navy); } .tagline span:nth-child(2) { color: var(--cyan-ink); }
 .steps-dots { display: flex; gap: 6px; justify-content: center; margin: 12px 0; }
-.steps-dots i { width: 8px; height: 8px; border-radius: 4px; background: var(--line); }
-.steps-dots i.on { width: 26px; background: var(--cyan); }
+.steps-dots button { width: 8px; height: 8px; min-height: 8px; padding: 0; border-radius: 4px; background: var(--line);
+  box-shadow: none; transition: width .2s ease, background .2s ease; }
+.steps-dots button.on { width: 26px; background: var(--cyan); }
+.slides { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch; margin: 0 -18px; flex: 1; }
+.slides::-webkit-scrollbar { display: none; }
+.slide { flex: 0 0 100%; scroll-snap-align: center; padding: 0 18px; box-sizing: border-box;
+  display: flex; flex-direction: column; justify-content: flex-end; }
+.slide-top { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 200px; }
+.slide-art { font-size: 6rem; width: 180px; height: 180px; border-radius: 50%; background: var(--cyan-soft);
+  display: inline-flex; align-items: center; justify-content: center; }
 
 table.md { border-collapse: collapse; width: 100%; font-size: .9rem; }
 table.md th, table.md td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; }

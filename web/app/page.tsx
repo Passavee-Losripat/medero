@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Hero from "@/components/Hero";
 import Icon from "@/components/Icon";
 import WhereToGo from "@/components/WhereToGo";
@@ -24,39 +24,61 @@ export default function Start() {
 function Welcome() {
   const router = useRouter();
   const [lang, setLang] = useState("en");
+  const [slide, setSlide] = useState(0);
+  const track = useRef<HTMLDivElement | null>(null);
   const s = t(lang);
+  const slides = [
+    { art: <Hero />, title: <><span>{s.welcome1}</span><br /><span>{s.welcome2}</span></>, body: s.welcomeBody },
+    { art: <span className="slide-art">✅</span>, title: s.slide2Title, body: s.slide2Body },
+    { art: <span className="slide-art">🔒</span>, title: s.slide3Title, body: s.slide3Body },
+  ];
   function go() {
     save("lang", lang);
     saveProfile({ ...EMPTY_PROFILE, lang });
     router.push("/profile?first=1");
   }
+  function show(i: number) {
+    const el = track.current;
+    if (el) el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+  }
   return (
     <main className="welcome fade-in">
-      <div>
-        <div className="row between" style={{ marginTop: 8 }}>
-          <span className="brand"><img src="/logo.png" alt="" />Medero</span>
-          <div className="seg" role="group" aria-label={s.language}>
-            {LANGS.map((l) => (
-              <button key={l.code} className={l.code === lang ? "on" : ""} onClick={() => setLang(l.code)}>{l.label}</button>
-            ))}
-          </div>
+      <div className="row between" style={{ marginTop: 8 }}>
+        <span className="brand"><img src="/logo.png" alt="" />Medero</span>
+        <div className="seg" role="group" aria-label={s.language}>
+          {LANGS.map((l) => (
+            <button key={l.code} className={l.code === lang ? "on" : ""} onClick={() => setLang(l.code)}>{l.label}</button>
+          ))}
         </div>
-        <div style={{ marginTop: 28 }}><Hero /></div>
       </div>
-      <div className="center">
-        <div className="row" style={{ gap: 14, justifyContent: "center" }}>
-          <img src="/logo.png" alt="Medero logo" width={64} height={64} style={{ borderRadius: 16 }} />
-          <h1 className="brand-big">Medero</h1>
+      {/* swipeable welcome slides (native scroll-snap, so it works with touch on iOS) */}
+      <div className="slides" ref={track} aria-roledescription="carousel"
+        onScroll={(e) => { const el = e.currentTarget; setSlide(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))); }}>
+        {slides.map((sl, i) => (
+          <section className="slide center" key={i} aria-label={`${i + 1} / ${slides.length}`}>
+            <div className="slide-top">{sl.art}</div>
+            {i === 0 && (
+              <div className="row" style={{ gap: 14, justifyContent: "center" }}>
+                <img src="/logo.png" alt="Medero logo" width={64} height={64} style={{ borderRadius: 16 }} />
+                <h1 className="brand-big">Medero</h1>
+              </div>
+            )}
+            <p className="tagline" style={i === 0 ? { fontSize: "1.2rem", margin: "6px 0 10px", fontWeight: 650 }
+              : { fontSize: "1.9rem", margin: "6px 0 10px", fontWeight: 800, lineHeight: 1.15 }}>{sl.title}</p>
+            <p className="muted">{sl.body}</p>
+          </section>
+        ))}
+      </div>
+      <div>
+        <div className="steps-dots" role="tablist">
+          {slides.map((_, i) => (
+            <button key={i} role="tab" aria-selected={slide === i} aria-label={`${i + 1}`}
+              className={slide === i ? "on" : ""} onClick={() => show(i)} />
+          ))}
         </div>
-        <p className="tagline" style={{ fontSize: "1.2rem", margin: "6px 0 10px", fontWeight: 650 }}>
-          <span>{s.welcome1}</span><br /><span>{s.welcome2}</span>
-        </p>
-        <p className="muted">{s.welcomeBody}</p>
-        <div className="steps-dots" aria-hidden="true"><i className="on" /><i /><i /></div>
         <button className="dark big cta" onClick={go}>
           {s.getStarted}<span className="arrow"><Icon name="arrow" /></span>
         </button>
-        <p className="center" style={{ margin: "10px 0 0" }}><a href="/?demo=1">✨ {s.demo}</a></p>
         <p className="muted center" style={{ fontSize: ".85rem" }}>{s.notAdvice}</p>
       </div>
     </main>
