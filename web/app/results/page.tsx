@@ -35,5 +35,5 @@ function render(md: string) {
 export default function Results() {
   const [md, setMd] = useState<string | null>(null);
   useEffect(() => { fetch(apiBase() + "/eval/latest").then((r) => r.text()).then(setMd).catch(() => setMd("API not reachable.")); }, []);
-  return (<><Header right={<span className="badge mock">MOCK DATA</span>} /><main>{md === null ? <p className="muted">…</p> : render(md)}</main></>);
+  return (<><Header title="Evaluation" right={<span className="badge mock">MOCK</span>} /><main>{md === null ? <p className="muted">…</p> : render(md)}</main></>);
 }

@@ -52,6 +52,7 @@ app.add_middleware(CORSMiddleware, allow_origins=[settings.web_origin, "http://l
 # ---------------- in-memory session store (guardrail 10: nothing persisted) ----------------
 
 SESSIONS: dict[str, tuple[VisitSession, float]] = {}
+_BACKGROUND: set[asyncio.Task] = set()
 
 
 def _sweep() -> None:
@@ -167,9 +168,16 @@ class Approval(BaseModel):
 async def approve_card(sid: str, body: Approval):
     sess = get_session(sid)
     intake.approve(sess.card, body.approved_ids)
-    card, untranslated, err = await intake.render_korean(sess.card, sess.spark)
-    return {"card": card.model_dump(), "untranslated_terms": untranslated, "error": err,
-            "fake_models": get_settings().use_fake}
+    if get_settings().use_fake:
+        card, untranslated, err = await intake.render_korean(sess.card, sess.spark)
+        return {"card": card.model_dump(), "untranslated_terms": untranslated, "error": err, "fake_models": True}
+    # Measured ~26 s with Spark (2026-11-04), so the Korean rendering (used for the fallback
+    # screen) runs in the background and the visit can start straight away.
+    task = asyncio.create_task(intake.render_korean(sess.card, sess.spark))
+    _BACKGROUND.add(task)
+    task.add_done_callback(_BACKGROUND.discard)
+    return {"card": sess.card.model_dump(), "untranslated_terms": [], "error": None, "fake_models": False,
+            "korean_rendering": "background"}
 
 
 @app.get("/sessions/{sid}")

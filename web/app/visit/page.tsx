@@ -1,297 +1,264 @@
 "use client";
+// The visit: a conversation. Medero listens hands-free; Korean speech is the doctor, anything
+// else is the patient. Questions only the patient can answer appear as a lilac card.
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import EmergencyCard from "@/components/EmergencyCard";
-import Header from "@/components/Header";
-import { api, load, wsUrl } from "@/lib/api";
+import Icon from "@/components/Icon";
+import { load, wsUrl } from "@/lib/api";
+import { HandsFree } from "@/lib/audio";
 import { t } from "@/lib/i18n";
 
 type Ev = Record<string, any>;
-const CLASS_COLORS: Record<string, string> = {
-  on_card: "", needs_fact: "warn", needs_decision: "warn", unclear: "danger", procedural: "",
-};
+type Phase = "off" | "listening" | "hearing";
 
 export default function Visit() {
+  const router = useRouter();
   const [lang, setLang] = useState("en");
   const [sid, setSid] = useState<string | null>(null);
-  const [status, setStatus] = useState<"connecting" | "open" | "closed">("connecting");
-  const [disclosure, setDisclosure] = useState<string>("");
+  const [closed, setClosed] = useState(false);
+  const [disclosure, setDisclosure] = useState("");
   const [consent, setConsent] = useState<Ev | null>(null);
   const [items, setItems] = useState<Ev[]>([]);
   const [ask, setAsk] = useState<Ev | null>(null);
   const [last, setLast] = useState<Ev | null>(null);
   const [emergency, setEmergency] = useState<Ev | null>(null);
-  const [summary, setSummary] = useState<Ev | null>(null);
+  const [phase, setPhase] = useState<Phase>("off");
+  const [pending, setPending] = useState(0);
+  const [level, setLevel] = useState(0);
+  const [typing, setTyping] = useState<null | "doctor" | "me">(null);
   const [text, setText] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [hood, setHood] = useState(false);
   const [big, setBig] = useState(false);
-  const [simulated, setSimulated] = useState(true);
-  const [recording, setRecording] = useState(false);
-  const [fake, setFake] = useState(false);
-  const [deleted, setDeleted] = useState(false);
+  const [micError, setMicError] = useState(false);
   const ws = useRef<WebSocket | null>(null);
-  const rec = useRef<MediaRecorder | null>(null);
-  const chunks = useRef<Blob[]>([]);
+  const hf = useRef<HandsFree | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const l = load("lang") || "en";
+    setLang(load("lang") || "en");
     const id = load("sid");
-    setLang(l); setSid(id);
-    api("/health").then((h) => setFake(!!h.fake_models)).catch(() => {});
-    if (!id) { setStatus("closed"); return; }
+    setSid(id);
+    if (!id) return;
     const sock = new WebSocket(wsUrl(`/sessions/${id}/visit`));
     ws.current = sock;
-    sock.onopen = () => { setStatus("open"); sock.send(JSON.stringify({ type: "start" })); };
-    sock.onclose = () => setStatus("closed");
+    sock.onopen = () => sock.send(JSON.stringify({ type: "start" }));
+    sock.onclose = () => setClosed(true);
     sock.onmessage = (m) => handle(JSON.parse(m.data));
-    return () => sock.close();
+    return () => { sock.close(); hf.current?.stop(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [items, ask]);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [items, ask, pending]);
 
+  const done = () => setPending((n) => Math.max(0, n - 1));
   function handle(e: Ev) {
     switch (e.type) {
       case "disclosure": setDisclosure(e.text_ko); break;
       case "consent": setConsent(e); break;
-      case "transcript": setItems((x) => [...x, { kind: "clinician", ...e }]); break;
+      case "transcript": setItems((x) => [...x, { kind: "doctor_raw", ...e }]); break;
+      case "patient_heard": setItems((x) => [...x, { kind: "you", text: e.text }]); break;
       case "turn_result":
-        setBusy(false); setLast(e);
+        done(); setLast(e);
         setItems((x) => [...x, { kind: "result", ...e }]);
-        if (e.ask_back) setAsk({ ...e.ask_back, said: e.clinician_said_patient_lang });
+        setAsk(e.ask_back ? { ...e.ask_back, said: e.clinician_said_patient_lang } : null);
         break;
-      case "relay_result": setBusy(false); setItems((x) => [...x, { kind: "relay", ...e }]); break;
+      case "relay_result": done(); setAsk(null); setItems((x) => [...x, { kind: "relay", ...e }]); break;
       case "fallback": setItems((x) => [...x, { kind: "fallback", ...e }]); break;
-      case "notice": setItems((x) => [...x, { kind: "notice", ...e }]); break;
-      case "asr_failed": setBusy(false); setItems((x) => [...x, { kind: "notice", text_patient: e.text_patient, error: e.error }]); break;
-      case "emergency": setBusy(false); setEmergency(e.card); setAsk(null); break;
-      case "summary": setSummary(e); break;
-      case "error": setBusy(false); setItems((x) => [...x, { kind: "notice", text_patient: e.text_patient || e.code }]); break;
+      case "notice": setItems((x) => [...x, { kind: "note", text: e.text_patient }]); break;
+      case "asr_failed": done(); if (!e.silent) setItems((x) => [...x, { kind: "note", text: e.text_patient }]); break;
+      case "emergency": done(); setEmergency(e.card); hf.current?.stop(); break;
+      case "error": done(); setItems((x) => [...x, { kind: "note", text: e.text_patient || e.code }]); break;
     }
   }
-  const send = (m: Ev) => ws.current?.readyState === 1 && ws.current.send(JSON.stringify(m));
+  const send = (m: Ev) => { if (ws.current?.readyState === 1) { ws.current.send(JSON.stringify(m)); return true; } return false; };
   const s = t(lang);
 
-  function sendText() {
-    if (!text.trim()) return;
-    setBusy(true); send({ type: "clinician_text", text }); setText("");
+  async function toggleListen() {
+    if (hf.current?.running) { hf.current.stop(); hf.current = null; setPhase("off"); setLevel(0); return; }
+    const h = new HandsFree({
+      onUtterance: (b64) => { if (send({ type: "utterance", data: b64 })) setPending((n) => n + 1); },
+      onLevel: (lv, speaking) => { setLevel(lv); setPhase(speaking ? "hearing" : "listening"); },
+      onError: () => setMicError(true),
+    });
+    if (await h.start()) { hf.current = h; setPhase("listening"); setMicError(false); }
   }
-  function sendAnswer(v: string) {
-    if (!ask || !v.trim()) return;
-    setItems((x) => [...x, { kind: "patient", text: v, question: ask.question_patient_lang }]);
-    setBusy(true); send({ type: "answer", ask_id: ask.id, text: v }); setAsk(null); setAnswer("");
-  }
-
-  async function startRec() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mr = new MediaRecorder(stream);
-      chunks.current = [];
-      mr.ondataavailable = (ev) => ev.data.size && chunks.current.push(ev.data);
-      mr.onstop = async () => {
-        stream.getTracks().forEach((tr) => tr.stop());
-        const blob = new Blob(chunks.current, { type: mr.mimeType || "audio/webm" });
-        chunks.current = []; // audio is sent once and not kept
-        const b64 = await blobToB64(blob);
-        setBusy(true); send({ type: "audio_turn", mime: blob.type, data: b64 });
-      };
-      rec.current = mr; mr.start(); setRecording(true);
-    } catch {
-      setItems((x) => [...x, { kind: "notice", text_patient: s.typeHere }]);
+  function sendTyped() {
+    const v = text.trim();
+    if (!v) return;
+    if (typing === "doctor") { if (send({ type: "clinician_text", text: v })) setPending((n) => n + 1); }
+    else {
+      setItems((x) => [...x, { kind: "you", text: v }]);
+      if (ask) { if (send({ type: "answer", ask_id: ask.id, text: v })) setPending((n) => n + 1); }
+      else if (send({ type: "patient_text", text: v })) setPending((n) => n + 1);
     }
+    setText("");
   }
-  function stopRec() { rec.current?.state === "recording" && rec.current.stop(); setRecording(false); }
-
-  async function del() {
-    if (!sid) return;
-    await api(`/sessions/${sid}`, { method: "DELETE" }).catch(() => {});
-    try { sessionStorage.clear(); } catch {}
-    ws.current?.close(); setDeleted(true);
+  function answer(v: string) {
+    if (!ask) return;
+    setItems((x) => [...x, { kind: "you", text: v }]);
+    if (send({ type: "answer", ask_id: ask.id, text: v })) setPending((n) => n + 1);
+    setAsk(null);
   }
+  function endVisit() { hf.current?.stop(); router.push("/after"); }
 
-  const header = (
-    <Header right={<>
-      {simulated && <span className="badge mock">{s.simulated}</span>}
-      {fake && <span className="badge danger">FAKE</span>}
-      <label className="toggle"><input type="checkbox" checked={big} onChange={(e) => setBig(e.target.checked)} /> {s.bigText}</label>
-      <label className="toggle"><input type="checkbox" checked={simulated} onChange={(e) => setSimulated(e.target.checked)} /> {s.simulated}</label>
-    </>} />
+  if (!sid) return <main><p>No visit yet. <a href="/">{s.backHome}</a></p></main>;
+  if (emergency) return <main className="fade-in"><EmergencyCard card={emergency as any} lang={lang} /></main>;
+
+  // Consent gate (guardrail 5): shown to staff first.
+  if (!consent?.accepted) return (
+    <main className={`fade-in ${big ? "huge" : ""}`}>
+      <div className="bar">
+        <button className="icon-btn" onClick={() => router.push("/")} aria-label={s.back}><Icon name="back" /></button>
+        <span className="title">{s.staffTitle}</span>
+        <button className={`icon-btn ${big ? "on" : ""}`} onClick={() => setBig(!big)} aria-label={s.bigText}><span lang="ko" style={{ fontWeight: 800 }}>가</span></button>
+      </div>
+      <p className="muted center">{s.showStaff}</p>
+      <div className="card stack" style={{ background: "var(--mint)", padding: 24 }}>
+        <span className="badge" style={{ background: "var(--surface)" }}>AI · Medero</span>
+        <p className="ko-big" lang="ko" style={{ margin: 0 }}>{consent && !consent.accepted ? consent.text_ko : disclosure || "…"}</p>
+        {consent && !consent.accepted ? <p>{consent.text_patient}</p> : (
+          <div className="row" style={{ flexWrap: "nowrap" }}>
+            <button className="dark big" lang="ko" disabled={!disclosure} onClick={() => send({ type: "consent", accepted: true })}>네, 괜찮아요</button>
+            <button className="big" lang="ko" disabled={!disclosure} onClick={() => send({ type: "consent", accepted: false })}>아니요</button>
+          </div>
+        )}
+      </div>
+      {closed && <div className="banner">Connection closed. Is the API running?</div>}
+    </main>
   );
 
-  if (deleted) return (<>{header}<main><p>{s.deleted}</p><a href="/">Medero</a></main></>);
-  if (!sid) return (<>{header}<main><p>No session. <a href="/intake">{s.start}</a></p></main></>);
-  if (emergency) return (<>{header}<main><EmergencyCard card={emergency as any} lang={lang} /></main></>);
-
-  // Consent gate (guardrail 5)
-  if (!consent?.accepted) {
-    return (
-      <>{header}
-        <main className={big ? "huge stack" : "stack"}>
-          <p className="muted">{s.showStaff}</p>
-          {consent && !consent.accepted ? (
-            <div className="card stack">
-              <span className="badge warn">{s.declined}</span>
-              <p className="ko-big" lang="ko">{consent.text_ko}</p>
-              <p>{consent.text_patient}</p>
-            </div>
-          ) : (
-            <div className="card stack">
-              <p className="ko-big" lang="ko">{disclosure || "…"}</p>
-              <div className="row">
-                <button className="primary big" lang="ko" disabled={!disclosure} onClick={() => send({ type: "consent", accepted: true })}>네, 괜찮아요</button>
-                <button className="big" lang="ko" disabled={!disclosure} onClick={() => send({ type: "consent", accepted: false })}>아니요</button>
-              </div>
-              {status === "closed" && <div className="banner">Connection closed. Is the API running?</div>}
-            </div>
-          )}
-        </main>
-      </>
-    );
-  }
-
-  if (summary) {
-    const record = summary.record;
-    return (
-      <>{header}
-        <main className="stack">
-          <h1>{s.summary}</h1>
-          <p className="muted">{summary.notice_patient}</p>
-          <div className="card">
-            <ol>{record.doctor_said.map((st: Ev, i: number) => <li key={i}>{st.text_patient_lang} <span className="muted">({st.source_turn_id})</span></li>)}</ol>
-          </div>
-          <div className="row">
-            <button className="primary" disabled={record.patient_confirmed} onClick={() => send({ type: "confirm_summary" })}>{record.patient_confirmed ? "✓" : ""} {s.confirmSummary}</button>
-            <button onClick={() => setSummary(null)}>{s.back}</button>
-            <a className="btn" href="/prescription">{s.prescription}</a>
-            <a className="btn" href="/insurance">{s.insurance}</a>
-            <button className="danger" onClick={del}>{s.deleteSession}</button>
-          </div>
-        </main>
-      </>
-    );
-  }
-
+  const label = phase === "off" ? s.tapToStart : pending ? s.thinking : phase === "hearing" ? s.hearing : s.listening;
   return (
-    <>{header}
-      <main className={big ? "huge" : ""}>
-        <div className="visit">
-          <section>
-            {items.map((it, i) => <Item key={i} it={it} s={s} />)}
-            {busy && <div className="muted">…</div>}
-            {ask && (
-              <div className="ask stack">
-                <strong>{s.askTitle}</strong>
-                {ask.said && <div className="muted">{s.doctorSaid}: {ask.said}</div>}
-                <div style={{ fontSize: "1.25rem", fontWeight: 700 }}>{ask.question_patient_lang}</div>
-                <div className="options">
-                  {(ask.options || []).map((o: string) => <button key={o} onClick={() => sendAnswer(o)}>{o}</button>)}
-                </div>
-                <label>{s.yourAnswer}</label>
-                <div className="row">
-                  <input className="grow" type="text" value={answer} onChange={(e) => setAnswer(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && sendAnswer(answer)} style={{ flex: 1 }} />
-                  <button className="primary" onClick={() => sendAnswer(answer)}>{s.answer}</button>
-                </div>
-              </div>
-            )}
-            <div ref={endRef} />
-            <div className="composer stack">
-              <label>{s.clinicianLine}</label>
-              <div className="row">
-                <input type="text" lang="ko" placeholder={s.typeHere} value={text} style={{ flex: 1 }}
-                  onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendText()} />
-                <button className="primary" disabled={busy || !text.trim()} onClick={sendText}>{s.send}</button>
-              </div>
-              <button className={`mic big ${recording ? "on" : ""}`} disabled={busy && !recording}
-                onPointerDown={startRec} onPointerUp={stopRec} onPointerLeave={() => recording && stopRec()}>
-                {recording ? s.recording : s.holdToTalk}
-              </button>
-              <button onClick={() => send({ type: "summary" })}>{s.summaryEnd}</button>
-            </div>
-          </section>
-          <aside className="panel stack">
-            <div className="card">
-              <h3>Turn</h3>
-              {last ? <>
-                <span className={`badge ${CLASS_COLORS[last.turn_class] || ""}`}>{last.turn_class}</span>{" "}
-                <span className="muted">router: {last.router}</span>
-                {last.blocked && <div className="banner">{s.blocked}<br /><span className="lat">{last.blocked.reasons.join(", ")}</span></div>}
-              </> : <span className="muted">–</span>}
-            </div>
-            <div className="card">
-              <h3>{s.evidence}</h3>
-              {last?.evidence?.length ? last.evidence.map((e: Ev) => (
-                <div key={e.id} className="fact"><span className="badge">{e.id}</span><div className="grow">{e.value}<div className="ko" lang="ko">{e.value_ko}</div></div></div>
-              )) : <span className="muted">–</span>}
-            </div>
-            <div className="card">
-              <h3>{s.latency} (ms)</h3>
-              {last?.latency_ms ? (
-                <table className="lat"><tbody>
-                  {["transcribe", "route", "respond", "verify", "total"].map((k) => (
-                    <tr key={k}><td>{k}</td><td>{last.latency_ms[k] ?? "–"}</td></tr>
-                  ))}
-                  <tr><td>Meta API calls</td><td>{last.spark_calls}</td></tr>
-                </tbody></table>
-              ) : <span className="muted">–</span>}
-            </div>
-          </aside>
+    <main className={`fade-in ${big ? "huge" : ""}`} style={{ paddingBottom: 0 }}>
+      <div className="bar">
+        <button className="icon-btn" onClick={endVisit} aria-label={s.endVisit}><Icon name="back" /></button>
+        <span className="title">{s.tileVisit}</span>
+        <div className="row" style={{ gap: 8, flexWrap: "nowrap" }}>
+          <button className={`icon-btn ${big ? "on" : ""}`} onClick={() => setBig(!big)} aria-label={s.bigText}><span lang="ko" style={{ fontWeight: 800 }}>가</span></button>
+          <button className={`icon-btn ${hood ? "on" : ""}`} onClick={() => setHood(!hood)} aria-label={s.hood}><Icon name="info" /></button>
         </div>
-      </main>
-    </>
+      </div>
+      <div className="row" style={{ justifyContent: "center", marginBottom: 8 }}>
+        <span className="badge mock">{s.simulated} · MOCK</span>
+      </div>
+
+      {hood && <Hood last={last} s={s} />}
+
+      <div className="chat">
+        {items.length === 0 && !ask && <div className="msg note">{s.tapToStart} · {s.typeDoctor}</div>}
+        {items.map((it, i) => <Bubble key={i} it={it} s={s} />)}
+        {ask && (
+          <div className="ask-card fade-in">
+            <span className="badge lilac" style={{ background: "var(--surface)" }}>{s.askTitle}</span>
+            {ask.said && <div className="muted" style={{ marginTop: 8 }}>{s.doctorSaid}: {ask.said}</div>}
+            <div className="q">{ask.question_patient_lang}</div>
+            <div className="chips">
+              {(ask.options || []).map((o: string) => <button key={o} className="chip" onClick={() => answer(o)}>{o}</button>)}
+            </div>
+            <div className="hint">🎙 {s.orSay}</div>
+          </div>
+        )}
+        {pending > 0 && <div className="msg note">{s.thinking}</div>}
+        <div ref={endRef} />
+      </div>
+
+      <div className="dock">
+        {micError && <div className="banner">{s.micDenied}</div>}
+        {typing && (
+          <div className="card flat" style={{ margin: "0 0 10px", padding: 12, background: "var(--surface)" }}>
+            <div className="seg" style={{ marginBottom: 8 }}>
+              <button className={typing === "doctor" ? "on" : ""} onClick={() => setTyping("doctor")}>{s.typeDoctor}</button>
+              <button className={typing === "me" ? "on" : ""} onClick={() => setTyping("me")}>{s.typeMe}</button>
+            </div>
+            <div className="typing">
+              <input type="text" autoFocus lang={typing === "doctor" ? "ko" : undefined} value={text}
+                placeholder={typing === "doctor" ? "예: 며칠 됐어요?" : s.yourAnswer}
+                onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendTyped()} />
+              <button className="primary" onClick={sendTyped} disabled={!text.trim()}>{s.send}</button>
+            </div>
+          </div>
+        )}
+        <div className="dock-inner">
+          <button className={`icon-btn ${typing ? "on" : ""}`} onClick={() => setTyping(typing ? null : "doctor")} aria-label="Keyboard"><Icon name="keyboard" /></button>
+          <button className={`mic-big ${phase === "off" ? "off" : ""}`} onClick={toggleListen} aria-label={label}>
+            {phase !== "off" && <span className="mic-ring" style={{ transform: `scale(${1 + level * 0.35})` }} />}
+            <Icon name={phase === "off" ? "mic" : "stop"} size={34} />
+          </button>
+          <button className="icon-btn" onClick={endVisit} aria-label={s.endVisit}><Icon name="check" /></button>
+        </div>
+        <div className={`dock-label ${phase !== "off" ? "live" : ""}`}>{label}</div>
+      </div>
+    </main>
   );
 }
 
-function Item({ it, s }: { it: Ev; s: ReturnType<typeof t> }) {
-  if (it.kind === "clinician") return (
-    <div className="turn clinician">
-      <div className="who">Clinician {it.uncertain && <span className="badge warn">uncertain</span>}</div>
+function Bubble({ it, s }: { it: Ev; s: ReturnType<typeof t> }) {
+  if (it.kind === "doctor_raw") return (
+    <div className="msg doctor fade-in">
+      <div className="who">🩺 {s.doctor}{it.uncertain && <span className="badge warn">uncertain</span>}</div>
       <div className="ko" lang="ko">{it.text_ko}</div>
     </div>
   );
   if (it.kind === "result") return (
-    <div className="turn agent">
-      {it.clinician_said_patient_lang && <div><span className="who">{s.doctorSaid}</span><div>{it.clinician_said_patient_lang}</div></div>}
-      {it.reply_ko && <div style={{ marginTop: 8 }}>
-        <span className="who">{s.agentSaid}</span>
-        <div className="ko-big" lang="ko">{it.reply_ko}</div>
-        {it.reply_patient_lang && <div className="muted">{it.reply_patient_lang}</div>}
-      </div>}
-      <div className="row" style={{ marginTop: 6 }}>
-        <span className={`badge ${CLASS_COLORS[it.turn_class] || ""}`}>{it.turn_class}</span>
-        {it.evidence?.map((e: Ev) => <span key={e.id} className="badge">{e.id}</span>)}
-        {it.blocked && <span className="badge danger">blocked</span>}
-        {it.confidence < 0.6 && <span className="badge warn">low confidence</span>}
-        <span className="muted lat">{it.latency_ms?.total} ms</span>
-      </div>
-    </div>
+    <>
+      {it.clinician_said_patient_lang && (
+        <div className="msg doctor fade-in">
+          <div className="who">{s.doctorSaid}</div>
+          <div className="gloss">{it.clinician_said_patient_lang}</div>
+        </div>
+      )}
+      {it.reply_ko && (
+        <div className="msg medero fade-in">
+          <div className="who">Medero · {s.toldDoctor}
+            {it.evidence?.length > 0 && <span className="badge" style={{ background: "var(--surface)" }}>✓ {s.fromCard}</span>}
+            {it.blocked && <span className="badge warn">verifier</span>}
+          </div>
+          <div className="ko-big" lang="ko">{it.reply_ko}</div>
+          {it.reply_patient_lang && <div className="muted" style={{ marginTop: 4 }}>{it.reply_patient_lang}</div>}
+        </div>
+      )}
+    </>
   );
-  if (it.kind === "patient") return (
-    <div className="turn patient"><div className="who">Patient</div><div>{it.text}</div></div>
+  if (it.kind === "you") return (
+    <div className="msg you fade-in"><div className="who">{s.youSaid}</div><div>{it.text}</div></div>
   );
   if (it.kind === "relay") return (
-    <div className="turn agent">
-      <span className="who">{s.agentSaid}</span>
+    <div className="msg medero fade-in">
+      <div className="who">Medero · {s.toldDoctor}{it.blocked && <span className="badge warn">your own words</span>}</div>
       <div className="ko-big" lang="ko">{it.reply_ko}</div>
-      <div className="muted">{it.reply_patient_lang}</div>
-      {it.blocked && <span className="badge danger">verifier: showing your own words</span>}
+      {it.reply_patient_lang && <div className="muted" style={{ marginTop: 4 }}>{it.reply_patient_lang}</div>}
     </div>
   );
   if (it.kind === "fallback") return (
-    <div className="turn agent">
-      <div className="banner">{it.text_patient}</div>
+    <div className="msg note fade-in">
+      <div>{it.text_patient}</div>
       <div className="ko" lang="ko">{it.note_ko}</div>
       {it.facts?.map((f: Ev) => <div key={f.id} className="ko-big" lang="ko">{f.value_ko || f.value}</div>)}
     </div>
   );
-  return <div className="banner">{it.text_patient}{it.error ? ` (${it.error})` : ""}</div>;
+  return <div className="msg note fade-in">{it.text}</div>;
 }
 
-function blobToB64(b: Blob): Promise<string> {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(String(r.result).split(",")[1] || "");
-    r.onerror = rej;
-    r.readAsDataURL(b);
-  });
+function Hood({ last, s }: { last: Ev | null; s: ReturnType<typeof t> }) {
+  return (
+    <div className="card hood fade-in">
+      <h3>{s.hood}</h3>
+      {!last ? <span className="muted">–</span> : (
+        <div className="stack">
+          <div className="row">
+            <span className={`badge ${last.turn_class === "on_card" || last.turn_class === "procedural" ? "" : "warn"}`}>{last.turn_class}</span>
+            <span className="muted">router: {last.router}</span>
+            {last.blocked && <span className="badge danger">blocked: {last.blocked.reasons.join(", ")}</span>}
+          </div>
+          {last.evidence?.length > 0 && (
+            <div>{last.evidence.map((e: Ev) => <div key={e.id}><span className="badge">{e.id}</span> {e.value} <span className="ko" lang="ko">{e.value_ko}</span></div>)}</div>
+          )}
+          <table><tbody>
+            {["transcribe", "route", "respond", "verify", "total"].map((k) => <tr key={k}><td>{k}</td><td>{last.latency_ms?.[k] ?? "–"} ms</td></tr>)}
+            <tr><td>Meta API calls</td><td>{last.spark_calls}</td></tr>
+          </tbody></table>
+        </div>
+      )}
+    </div>
+  );
 }

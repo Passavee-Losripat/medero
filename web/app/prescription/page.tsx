@@ -21,7 +21,7 @@ export default function Prescription() {
   }
   return (
     <>
-      <Header />
+      <Header title={s.prescription} />
       <main className="stack narrow">
         <h1>{s.prescription}</h1>
         <div className="banner"><strong>{s.confirmPharmacist}.</strong> {s.notAdvice}</div>

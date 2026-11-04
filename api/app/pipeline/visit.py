@@ -242,7 +242,9 @@ class VisitSession:
                      "text_patient": fx.patient_text("consent_needed", self._lang())}]
         if self.pending:
             ask_id = list(self.pending)[-1]
-            return await self.patient_answer(ask_id, text)
+            pa = self.pending.pop(ask_id)
+            return await self._relay(text, pa.question_ko, pa.ask.question_patient_lang, ask_id, pa.turn_id,
+                                     asr_ms=asr_ms)
         last_ko = next((t.korean_text for t in reversed(self.record.turns) if t.speaker == "clinician"), "")
         return await self._relay(text, last_ko, "", None, None, asr_ms=asr_ms)
 

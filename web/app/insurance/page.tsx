@@ -35,7 +35,7 @@ export default function Insurance() {
 
   return (
     <>
-      <Header />
+      <Header title={s.insurance} />
       <main className="stack narrow">
         <h1>{s.insurance}</h1>
         <div className="banner">{pack?.notice || s.insurerHelp}</div>
