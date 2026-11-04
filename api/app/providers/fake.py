@@ -71,7 +71,8 @@ def default_handler(task: str, system: str, user: Any) -> dict | None:
                 "confidence": 0.5}
 
     if task == "gloss":
-        return {"clinician_said_patient_lang": f"{TAG} The doctor said: {_clinician(user)}", "confidence": 0.5}
+        return {"clinician_said_patient_lang": f"{TAG} The doctor said: {_clinician(user)}", "understood": True,
+                "confidence": 0.5}
 
     if task == "relay":
         m = re.search(r"PATIENT ANSWERED: (.*)", user if isinstance(user, str) else "")

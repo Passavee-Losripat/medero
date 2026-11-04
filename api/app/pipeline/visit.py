@@ -108,8 +108,10 @@ class VisitSession:
         r = await route(turn.korean_text, self.card, self.router)
         lat = {"transcribe": round(asr_ms, 1) if asr_ms is not None else None, "route": round(r.latency_ms, 1)}
         spark_calls = 1 if r.api_call else 0
+        # an uncertain transcript is never answered: Medero asks the doctor to repeat (guardrail 11)
+        cls = "unclear" if uncertain else r.turn_class
 
-        plan, gloss, err, respond_ms = await self._plan_for(r.turn_class, r.fact_ids, turn)
+        plan, gloss, err, respond_ms = await self._plan_for(cls, r.fact_ids, turn)
         spark_calls += 1
         lat["respond"] = round(respond_ms, 1)
 
@@ -150,7 +152,8 @@ class VisitSession:
         events.append({
             "type": "turn_result", "turn_id": turn.id, "turn_class": plan.turn_class,
             "router": r.provider, "router_confidence": r.confidence,
-            "clinician_said_patient_lang": gloss, "gloss_check": fidelity.compare(turn.korean_text, gloss) if gloss else [],
+            "clinician_said_patient_lang": gloss,
+            "gloss_check": fidelity.compare(turn.korean_text, gloss) if gloss and plan.turn_class != "unclear" else [],
             "reply_ko": plan.reply_ko,
             "reply_patient_lang": plan.reply_patient_lang, "evidence": self._evidence(plan.evidence),
             "ask_back": ask_event, "blocked": blocked, "confidence": plan.confidence,
@@ -197,6 +200,8 @@ class VisitSession:
         res = await self.spark.json(task="gloss", system=prompts.gloss_system(card), user=user,
                                     schema=prompts.GLOSS_SCHEMA)
         gloss = str((res.data or {}).get("clinician_said_patient_lang") or "")
+        if (res.data or {}).get("understood") is False:
+            cls = "unclear"  # the model could not make sense of it: ask the doctor to say it again
         if cls == "unclear":
             plan = ReplyPlan(turn_class="unclear", reply_ko=fx.REPEAT_KO,
                              reply_patient_lang=fx.patient_text("repeat_requested", self._lang()),
@@ -304,6 +309,17 @@ class VisitSession:
                  "latency_ms": {"transcribe": round(asr_ms, 1) if asr_ms is not None else None,
                                 "respond": round(res.latency_ms, 1),
                                 "total": round((time.perf_counter() - t0) * 1000, 1)}}]
+
+    def ask_repeat(self) -> list[Event]:
+        """The patient taps "ask to repeat": the fixed Korean request, nothing generated."""
+        if self.consent is not True:
+            return [{"type": "error", "code": "consent_needed",
+                     "text_patient": fx.patient_text("consent_needed", self._lang())}]
+        self.record.turns.append(Turn(id=self._next_id("a"), speaker="agent", korean_text=fx.REPEAT_KO,
+                                      patient_lang_text=fx.patient_text("repeat_requested", self._lang())))
+        return [{"type": "relay_result", "ask_id": None, "fact_id": None, "reply_ko": fx.REPEAT_KO,
+                 "reply_patient_lang": fx.patient_text("repeat_requested", self._lang()), "blocked": None,
+                 "error": None, "patient_text": "", "latency_ms": {}}]
 
     # ---------- summary ----------
     def summary(self) -> Event:

@@ -208,6 +208,11 @@ export default function Visit() {
             </div>
           </div>
         )}
+        <div className="row" style={{ justifyContent: "center", marginBottom: 8 }}>
+          <button className="chip" onClick={() => { unlockSpeech(); if (send({ type: "ask_repeat" })) setPending((n) => n + 1); }}>
+            🔁 {s.askRepeat}
+          </button>
+        </div>
         <div className="dock-inner">
           <button className={`icon-btn ${typing ? "on" : ""}`} onClick={() => setTyping(typing ? null : "doctor")} aria-label="Keyboard"><Icon name="keyboard" /></button>
           <button className={`mic-big ${phase === "off" ? "off" : ""}`} onClick={toggleListen} aria-label={label}>

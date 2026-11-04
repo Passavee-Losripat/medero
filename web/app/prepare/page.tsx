@@ -35,8 +35,11 @@ export default function Prepare() {
     const p = loadProfile();
     if (!p) { router.replace("/"); return; }
     setProfile(p);
-    try { setFeeling(sessionStorage.getItem("medero.feeling") || ""); } catch {}
-    if (p.mock) { // MOCK demo persona: pre-fill the red-eyes story
+    let typed = "";
+    try { typed = sessionStorage.getItem("medero.feeling") || ""; } catch {}
+    setFeeling(typed);
+    // MOCK demo persona: pre-fill the red-eyes story only if that is the story (nothing typed, or about eyes)
+    if (p.mock && (!typed.trim() || /eye|ตา|눈/i.test(typed))) {
       setFeeling((f) => f || "Both eyes are red and itchy");
       setOnset("Saturday morning, the day after swimming at an indoor pool");
       setSeverity("itching 6 out of 10, no strong pain");
@@ -98,7 +101,7 @@ export default function Prepare() {
         </div>
         <WhereToGo text={[feeling, site].filter(Boolean).join(" ")} lang={profile.lang} title={s.whereToGo} model />
         {err && <div className="banner">{err}</div>}
-        <button className="dark big cta" disabled={busy} onClick={approve}>
+        <button className="dark big cta" style={{ marginTop: 20 }} disabled={busy} onClick={approve}>
           {busy ? s.thinking : s.startTalking}<span className="arrow"><Icon name="arrow" /></span>
         </button>
       </main>

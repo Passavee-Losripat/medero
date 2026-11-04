@@ -154,8 +154,9 @@ TASK: The clinician asked something only the patient can answer. Write the quest
 
 GLOSS_SCHEMA = {
     "type": "object",
-    "properties": {"clinician_said_patient_lang": {"type": "string"}, "confidence": {"type": "number"}},
-    "required": ["clinician_said_patient_lang", "confidence"],
+    "properties": {"clinician_said_patient_lang": {"type": "string"}, "understood": {"type": "boolean"},
+                   "confidence": {"type": "number"}},
+    "required": ["clinician_said_patient_lang", "understood", "confidence"],
 }
 
 
@@ -164,7 +165,8 @@ def gloss_system(card: CaseCard) -> str:
     return f"""{CORE_RULES}
 
 TASK: Render what the clinician said into plain {lang} for the patient. Faithful, short, no added advice,
-no explanation of medical meaning beyond what was said. If it is unintelligible, say so plainly.
+no explanation of medical meaning beyond what was said. Set understood=false if the text is garbled, mixes in
+another language mid-word, or you cannot tell what was meant (Medero will then ask the clinician to repeat).
 
 {glossary_block()}"""
 

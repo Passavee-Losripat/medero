@@ -311,3 +311,30 @@ async def test_reply_with_unsupported_negation_is_blocked():
     sess.set_consent(True)
     res = [e for e in await sess.clinician_turn("며칠 됐어요?") if e["type"] == "turn_result"][0]
     assert res["blocked"] and "rule3b_negation_not_in_evidence" in res["blocked"]["reasons"]
+
+
+
+async def test_uncertain_or_garbled_doctor_line_asks_to_repeat():
+    sess = await _session()
+    res = [e for e in await sess.clinician_turn("렌즈는 당분간 끼지 마세요", uncertain=True) if e["type"] == "turn_result"][0]
+    assert res["turn_class"] == "unclear" and res["reply_ko"] == fx.REPEAT_KO and res["gloss_check"] == []
+
+    def confused(task, system, user):
+        if task == "gloss":
+            return {"clinician_said_patient_lang": "Sorry, I could not understand.", "understood": False,
+                    "confidence": 0.2}
+        from app.providers.fake import default_handler
+        return default_handler(task, system, user)
+
+    s2 = new_session(demo_card(), FakeProvider(handler=confused), None)
+    s2.set_consent(True)
+    res = [e for e in await s2.clinician_turn("턱을 여기 올리시고 앞을 보세요.") if e["type"] == "turn_result"][0]
+    assert res["reply_ko"] == fx.REPEAT_KO
+    ev = s2.ask_repeat()
+    assert ev[0]["reply_ko"] == fx.REPEAT_KO
+
+
+def test_mixed_script_transcript_is_uncertain():
+    from app.main import mixed_script
+    assert mixed_script("어 렌즈는ทางบริการ끼지마세요")
+    assert not mixed_script("렌즈는 당분간 끼지 마세요. 1층 약국")

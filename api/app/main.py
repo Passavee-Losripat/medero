@@ -36,6 +36,13 @@ SESSION_TTL_S = 2 * 3600
 KEYWORDS = [t["ko"] for t in glossary()][:60]  # bias ASR toward reviewed clinic terms
 
 
+def mixed_script(text: str) -> bool:
+    """Speech-to-text sometimes splices another script into a Korean line (e.g. Thai mid-sentence).
+    Such a transcript is treated as uncertain and the doctor is asked to repeat."""
+    other = [c for c in text if "\u0e00" <= c <= "\u0e7f" or "\u3040" <= c <= "\u30ff" or "\u4e00" <= c <= "\u9fff"]
+    return len(other) >= 2
+
+
 def is_korean(text: str) -> bool:
     letters = [c for c in text if c.isalpha()]
     hangul = [c for c in letters if "\uac00" <= c <= "\ud7a3"]
@@ -276,7 +283,7 @@ async def visit_ws(ws: WebSocket, sid: str):
                                                                             sess.card.patient_language)})
                         continue
                     if is_korean(tr.text):
-                        await send_all(await sess.clinician_turn(tr.text, uncertain=tr.uncertain,
+                        await send_all(await sess.clinician_turn(tr.text, uncertain=tr.uncertain or mixed_script(tr.text),
                                                                  asr_ms=tr.latency_ms))
                     else:
                         await ws.send_json({"type": "patient_heard", "text": tr.text})
@@ -285,6 +292,8 @@ async def visit_ws(ws: WebSocket, sid: str):
                     await send_all(await sess.patient_say(str(msg.get("text") or "")))
                 elif kind == "answer":
                     await send_all(await sess.patient_answer(str(msg.get("ask_id")), str(msg.get("text") or "")))
+                elif kind == "ask_repeat":
+                    await send_all(sess.ask_repeat())
                 elif kind == "summary":
                     await ws.send_json(sess.summary())
                 elif kind == "confirm_summary":

@@ -20,3 +20,4 @@ private/
 eval/results/offline/
 .env.tmp
 data/mock/.fonts/
+/IMG_*
