@@ -17,6 +17,7 @@ export default function Prescription() {
   // Private reader = Muse Glimmer on our own GPU. It scales to zero, so it may be waking up (~1 min).
   const [priv, setPriv] = useState<{ configured: boolean; ready: boolean } | null>(null);
   const [toCover, setToCover] = useState<File | null>(null);
+  const [coverCloud, setCoverCloud] = useState(true);  // true: cloud reader, header box suggested
   const [warmNote, setWarmNote] = useState(false);
   const privRef = useRef(priv);
   privRef.current = priv;
@@ -37,8 +38,9 @@ export default function Prescription() {
   function onFile(f: File | undefined) {
     if (!f) return;
     setRes(null); setErr(""); setWarmNote(false);
-    if (privRef.current?.ready) upload(f, false);
-    else { setPreview(null); setWarmNote(!!privRef.current?.configured); setToCover(f); }
+    // every photo passes the cover step: optional with the private reader, suggested with the cloud reader
+    const cloud = !privRef.current?.ready;
+    setPreview(null); setCoverCloud(cloud); setWarmNote(cloud && !!privRef.current?.configured); setToCover(f);
   }
   async function upload(f: File, cloud: boolean) {
     setToCover(null);
@@ -46,7 +48,7 @@ export default function Prescription() {
     try { setRes(await postForm("/prescription", { file: f, lang, cloud: cloud ? "true" : "false" })); }
     catch (e: any) {
       if (String(e.message).includes("private_reader_warming")) {  // went to sleep meanwhile: cover, then cloud
-        setPriv((p) => p && { ...p, ready: false }); setPreview(null); setWarmNote(true); setToCover(f);
+        setPriv((p) => p && { ...p, ready: false }); setPreview(null); setCoverCloud(true); setWarmNote(true); setToCover(f);
       } else setErr(String(e.message || e));
     } finally { setBusy(false); }
   }
@@ -82,8 +84,11 @@ export default function Prescription() {
         )}
         {toCover && warmNote && <div className="banner">{s.privWakingCover}</div>}
         {toCover && (
-          <RedactEditor file={toCover} onDone={(f) => upload(f, true)} onCancel={() => setToCover(null)}
-            labels={{ title: s.coverTitle, help: s.coverHelp, reset: s.coverReset, send: s.coverSend, cancel: s.cancel }} />
+          <RedactEditor key={coverCloud ? "cloud" : "private"} file={toCover} suggest={coverCloud}
+            onDone={(f) => upload(f, coverCloud)} onCancel={() => setToCover(null)}
+            labels={coverCloud
+              ? { title: s.coverTitle, help: s.coverHelp, reset: s.coverReset, send: s.coverSend, cancel: s.cancel }
+              : { title: s.coverOptTitle, help: s.coverOptHelp, reset: s.coverReset, send: s.coverOptSend, cancel: s.cancel }} />
         )}
         {preview && <img src={preview} alt="uploaded label" className="rx-preview" />}
         {busy && <p className="muted center">{s.reading}</p>}
