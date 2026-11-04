@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import EmergencyCard from "@/components/EmergencyCard";
 import Header from "@/components/Header";
 import Icon from "@/components/Icon";
+import WhereToGo from "@/components/WhereToGo";
 import { CaseCard, Fact, allFacts, postJson, save } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { Profile, loadProfile } from "@/lib/profile";
@@ -95,6 +96,7 @@ export default function Prepare() {
             </label>
           ))}
         </div>
+        <WhereToGo text={[feeling, site].filter(Boolean).join(" ")} lang={profile.lang} title={s.whereToGo} />
         {err && <div className="banner">{err}</div>}
         <button className="dark big cta" disabled={busy} onClick={approve}>
           {busy ? s.thinking : s.startTalking}<span className="arrow"><Icon name="arrow" /></span>

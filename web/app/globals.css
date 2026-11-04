@@ -101,6 +101,13 @@ button.big, .btn.big { width: 100%; padding: 16px 22px; font-size: 1.08rem; min-
 .pick label.btn { margin: 0; flex-direction: column; gap: 6px; min-height: 96px; border-radius: 20px; font-weight: 700; }
 .pick input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .icon-btn.speak { width: 32px; height: 32px; min-height: 32px; margin-left: auto; box-shadow: none; background: var(--surface); }
+.where { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding: 12px 14px; border-radius: 20px;
+  background: var(--surface); border: 2px solid var(--cyan); }
+.where.urgent { border-color: var(--danger); color: var(--danger); font-weight: 700; text-decoration: none; }
+.where-row { display: flex; align-items: center; gap: 10px; }
+.where-ko { font-size: 1.5rem; font-weight: 800; color: var(--navy); }
+.where-name { color: var(--muted); font-size: .9rem; }
+.where-map { padding: 8px 14px; min-height: 40px; font-size: .9rem; }
 .map-links { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 .map-links .btn { padding: 10px 8px; font-size: .92rem; min-height: 44px; }
 .rx-cols { display: grid; grid-template-columns: repeat(3, auto) 1fr; gap: 8px; }

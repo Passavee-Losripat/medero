@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Hero from "@/components/Hero";
 import Icon from "@/components/Icon";
+import WhereToGo from "@/components/WhereToGo";
 import { api, save } from "@/lib/api";
 import { LANGS, t } from "@/lib/i18n";
 import { EMPTY_PROFILE, Profile, SAMPLE_PROFILE, loadProfile, saveProfile } from "@/lib/profile";
@@ -102,6 +103,7 @@ function Home({ profile }: { profile: Profile }) {
           <Icon name="arrow" />
         </button>
       </form>
+      <WhereToGo text={feeling} lang={profile.lang} title={s.lookFor} />
 
       <div className="tiles" style={{ marginTop: 22 }}>
         <button className="tile mint" onClick={startVisit}>
