@@ -160,8 +160,9 @@ _DOC_SYNONYMS: dict[str, list[str]] = {
 
 def doc_key(name: str) -> str | None:
     n = name.lower()
-    if "slip" in n and "card" in n:
-        return "card_slip"  # explicitly not a pharmacy receipt
+    # a captured card payment slip is never a pharmacy receipt (some insurers reject them)
+    if "slip" in n and "card" in n and not any(w in n for w in ("receipt", "영수증")):
+        return "card_slip"
     # check longer synonyms first so "pharmacy receipt" wins over "receipt"
     pairs = sorted(((s, k) for k, ss in _DOC_SYNONYMS.items() for s in ss), key=lambda p: -len(p[0]))
     for s, k in pairs:
