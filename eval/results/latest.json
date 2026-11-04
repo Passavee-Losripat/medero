@@ -1,0 +1,692 @@
+{
+ "generated_at": "2026-11-04T13:12:24+00:00",
+ "fake": false,
+ "spark_model": "muse-spark-1.3",
+ "router": [
+  {
+   "router": "rules",
+   "n": 45,
+   "accuracy": 0.756,
+   "per_class": {
+    "on_card": 0.812,
+    "needs_fact": 1.0,
+    "needs_decision": 0.4,
+    "procedural": 1.0,
+    "unclear": 0.0
+   },
+   "latency_p50_ms": 0.0,
+   "latency_p95_ms": 0.0,
+   "api_calls": 0,
+   "errors": 0,
+   "confusion": {
+    "on_card->needs_fact": 3,
+    "needs_decision->needs_fact": 6,
+    "unclear->needs_fact": 1,
+    "unclear->procedural": 1
+   },
+   "rows": [
+    {
+     "id": "u01",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u02",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u03",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u04",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u05",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u06",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u07",
+     "label": "on_card",
+     "pred": "needs_fact",
+     "ok": false
+    },
+    {
+     "id": "u08",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u09",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u10",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u11",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u12",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u13",
+     "label": "needs_decision",
+     "pred": "needs_decision",
+     "ok": true
+    },
+    {
+     "id": "u14",
+     "label": "needs_decision",
+     "pred": "needs_fact",
+     "ok": false
+    },
+    {
+     "id": "u15",
+     "label": "needs_decision",
+     "pred": "needs_fact",
+     "ok": false
+    },
+    {
+     "id": "u16",
+     "label": "needs_decision",
+     "pred": "needs_decision",
+     "ok": true
+    },
+    {
+     "id": "u17",
+     "label": "procedural",
+     "pred": "procedural",
+     "ok": true
+    },
+    {
+     "id": "u18",
+     "label": "procedural",
+     "pred": "procedural",
+     "ok": true
+    },
+    {
+     "id": "u19",
+     "label": "procedural",
+     "pred": "procedural",
+     "ok": true
+    },
+    {
+     "id": "u20",
+     "label": "procedural",
+     "pred": "procedural",
+     "ok": true
+    },
+    {
+     "id": "u21",
+     "label": "procedural",
+     "pred": "procedural",
+     "ok": true
+    },
+    {
+     "id": "u22",
+     "label": "unclear",
+     "pred": "needs_fact",
+     "ok": false
+    },
+    {
+     "id": "u23",
+     "label": "unclear",
+     "pred": "procedural",
+     "ok": false
+    },
+    {
+     "id": "u24",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u25",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u26",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u27",
+     "label": "needs_decision",
+     "pred": "needs_decision",
+     "ok": true
+    },
+    {
+     "id": "u28",
+     "label": "procedural",
+     "pred": "procedural",
+     "ok": true
+    },
+    {
+     "id": "u29",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u30",
+     "label": "needs_decision",
+     "pred": "needs_fact",
+     "ok": false
+    },
+    {
+     "id": "u31",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u32",
+     "label": "needs_decision",
+     "pred": "needs_fact",
+     "ok": false
+    },
+    {
+     "id": "u33",
+     "label": "procedural",
+     "pred": "procedural",
+     "ok": true
+    },
+    {
+     "id": "u34",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u35",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u36",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u37",
+     "label": "needs_decision",
+     "pred": "needs_fact",
+     "ok": false
+    },
+    {
+     "id": "u38",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u39",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u40",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u41",
+     "label": "on_card",
+     "pred": "needs_fact",
+     "ok": false
+    },
+    {
+     "id": "u42",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u43",
+     "label": "needs_decision",
+     "pred": "needs_fact",
+     "ok": false
+    },
+    {
+     "id": "u44",
+     "label": "on_card",
+     "pred": "needs_fact",
+     "ok": false
+    },
+    {
+     "id": "u45",
+     "label": "needs_decision",
+     "pred": "needs_decision",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "router": "spark",
+   "n": 45,
+   "accuracy": 0.911,
+   "per_class": {
+    "on_card": 0.875,
+    "needs_fact": 0.8,
+    "needs_decision": 1.0,
+    "procedural": 1.0,
+    "unclear": 1.0
+   },
+   "latency_p50_ms": 2464.7,
+   "latency_p95_ms": 6145.9,
+   "api_calls": 45,
+   "errors": 0,
+   "confusion": {
+    "on_card->needs_fact": 2,
+    "needs_fact->on_card": 2
+   },
+   "rows": [
+    {
+     "id": "u01",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u02",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u03",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u04",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u05",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u06",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u07",
+     "label": "on_card",
+     "pred": "needs_fact",
+     "ok": false
+    },
+    {
+     "id": "u08",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u09",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u10",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u11",
+     "label": "needs_fact",
+     "pred": "on_card",
+     "ok": false
+    },
+    {
+     "id": "u12",
+     "label": "needs_fact",
+     "pred": "on_card",
+     "ok": false
+    },
+    {
+     "id": "u13",
+     "label": "needs_decision",
+     "pred": "needs_decision",
+     "ok": true
+    },
+    {
+     "id": "u14",
+     "label": "needs_decision",
+     "pred": "needs_decision",
+     "ok": true
+    },
+    {
+     "id": "u15",
+     "label": "needs_decision",
+     "pred": "needs_decision",
+     "ok": true
+    },
+    {
+     "id": "u16",
+     "label": "needs_decision",
+     "pred": "needs_decision",
+     "ok": true
+    },
+    {
+     "id": "u17",
+     "label": "procedural",
+     "pred": "procedural",
+     "ok": true
+    },
+    {
+     "id": "u18",
+     "label": "procedural",
+     "pred": "procedural",
+     "ok": true
+    },
+    {
+     "id": "u19",
+     "label": "procedural",
+     "pred": "procedural",
+     "ok": true
+    },
+    {
+     "id": "u20",
+     "label": "procedural",
+     "pred": "procedural",
+     "ok": true
+    },
+    {
+     "id": "u21",
+     "label": "procedural",
+     "pred": "procedural",
+     "ok": true
+    },
+    {
+     "id": "u22",
+     "label": "unclear",
+     "pred": "unclear",
+     "ok": true
+    },
+    {
+     "id": "u23",
+     "label": "unclear",
+     "pred": "unclear",
+     "ok": true
+    },
+    {
+     "id": "u24",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u25",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u26",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u27",
+     "label": "needs_decision",
+     "pred": "needs_decision",
+     "ok": true
+    },
+    {
+     "id": "u28",
+     "label": "procedural",
+     "pred": "procedural",
+     "ok": true
+    },
+    {
+     "id": "u29",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u30",
+     "label": "needs_decision",
+     "pred": "needs_decision",
+     "ok": true
+    },
+    {
+     "id": "u31",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u32",
+     "label": "needs_decision",
+     "pred": "needs_decision",
+     "ok": true
+    },
+    {
+     "id": "u33",
+     "label": "procedural",
+     "pred": "procedural",
+     "ok": true
+    },
+    {
+     "id": "u34",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u35",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u36",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u37",
+     "label": "needs_decision",
+     "pred": "needs_decision",
+     "ok": true
+    },
+    {
+     "id": "u38",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u39",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u40",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u41",
+     "label": "on_card",
+     "pred": "on_card",
+     "ok": true
+    },
+    {
+     "id": "u42",
+     "label": "needs_fact",
+     "pred": "needs_fact",
+     "ok": true
+    },
+    {
+     "id": "u43",
+     "label": "needs_decision",
+     "pred": "needs_decision",
+     "ok": true
+    },
+    {
+     "id": "u44",
+     "label": "on_card",
+     "pred": "needs_fact",
+     "ok": false
+    },
+    {
+     "id": "u45",
+     "label": "needs_decision",
+     "pred": "needs_decision",
+     "ok": true
+    }
+   ]
+  }
+ ],
+ "visits": [
+  {
+   "router": "rules",
+   "visits": 3,
+   "decision_escalation": "3/3",
+   "unsupported_claims_after_verifier": 0,
+   "spoken_replies": 12,
+   "audit_flagged": 1,
+   "audit_failed": 0,
+   "audit_rows": [
+    {
+     "turn": "ไม่มีค่ะ",
+     "reply_ko": "복용 중인 약 없습니다.",
+     "evidence": [
+      "conf_8"
+     ],
+     "reason": [
+      "rule5_unsupported:EVIDENCE only states '없음' with no subject; it does not state anything about medication. The sentence asserts 'no medicat"
+     ]
+    }
+   ],
+   "replies_blocked_by_verifier": 0,
+   "latency_ms": {
+    "route": {
+     "p50": 0.0,
+     "p95": 0.1
+    },
+    "respond": {
+     "p50": 4962.4,
+     "p95": 7216.8
+    },
+    "verify": {
+     "p50": 0.0,
+     "p95": 0.2
+    },
+    "total": {
+     "p50": 4962.9,
+     "p95": 7217.6
+    }
+   },
+   "api_calls_per_visit_mean": 7.67
+  }
+ ],
+ "prescription": {
+  "slips": 3,
+  "fields": 30,
+  "field_accuracy": 1.0,
+  "latency_p50_ms": 11390.1
+ },
+ "claims": {
+  "sets": 4,
+  "exact_match": "4/4",
+  "rows": [
+   {
+    "id": "s01",
+    "match": true,
+    "missing": [
+     "itemized expense statement",
+     "document showing disease name or disease code",
+     "pharmacy receipt (card payment slips not accepted)"
+    ],
+    "expected": [
+     "itemized expense statement",
+     "document showing disease name or disease code",
+     "pharmacy receipt (card payment slips not accepted)"
+    ]
+   },
+   {
+    "id": "s02",
+    "match": true,
+    "missing": [],
+    "expected": []
+   },
+   {
+    "id": "s03",
+    "match": true,
+    "missing": [
+     "medical fee receipt",
+     "copy of passport photo page"
+    ],
+    "expected": [
+     "medical fee receipt",
+     "copy of passport photo page"
+    ]
+   },
+   {
+    "id": "s04",
+    "match": true,
+    "missing": [],
+    "expected": []
+   }
+  ]
+ },
+ "meter": {
+  "calls": 83,
+  "input_tokens": 43523,
+  "output_tokens": 24085,
+  "est_cost_usd": null
+ }
+}

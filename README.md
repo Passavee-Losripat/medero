@@ -63,8 +63,21 @@ set `ROUTER_PROVIDER=local`. Microphone access needs HTTPS outside localhost.
 
 ## Results
 
-Measured numbers only, from `eval/results/latest.md` (also shown at `/results` in the app).
-Not yet run with real models: **[pending API key]**.
+Measured on 2026-11-04 with `muse-spark-1.3` (reasoning effort `minimal`). All data is MOCK and written by
+the developer; Korean awaits native-speaker review. Full table: `eval/results/latest.md` (also `/results` in the app).
+
+| What | Result |
+|---|---|
+| Turn router accuracy, 45 labelled utterances | Spark 91.1% (p50 2.5 s) · offline rules 75.6% (0 ms, no API call) |
+| Decisions sent back to the patient (role-plays) | 3 / 3 |
+| Spoken replies flagged by an independent Spark audit | 1 / 12 (a relayed "no" that the auditor could not tie to the question; see below) |
+| Clinician turn to Korean reply, p50 / p95 (text input, rules router) | 5.0 s / 7.2 s |
+| Prescription fields, 3 MOCK labels | 30 / 30 exact match (clean rendered images) |
+| Missing insurance documents, 4 MOCK sets | 4 / 4 correct |
+
+Notes: the rules router never sent a "needs the patient" turn to the card (its errors all ask the patient);
+Spark sent 2 such turns to the card. The latency is above the 2.5 s target. One relay call hit the 15 s timeout
+and succeeded on retry.
 
 ## Privacy
 

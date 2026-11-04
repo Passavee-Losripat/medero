@@ -25,7 +25,7 @@ sys.path.insert(0, str(ROOT / "api"))
 from app.config import get_settings  # noqa: E402
 from app.pipeline import documents, intake  # noqa: E402
 from app.pipeline.router import route  # noqa: E402
-from app.pipeline.verifier import FIXED_PHRASES, check_rules  # noqa: E402
+from app.pipeline.verifier import FIXED_PHRASES, check_model, check_rules  # noqa: E402
 from app.pipeline.visit import new_session  # noqa: E402
 from app.providers.llm import METER, router_provider, spark_provider  # noqa: E402
 from app.schemas import TURN_CLASSES, CapturedDoc, IntakeAnswers, ReplyPlan  # noqa: E402
@@ -99,6 +99,9 @@ async def eval_visits(router_name: str, cases: dict) -> dict:
     stage = defaultdict(list)
     decisions = escalated = 0
     unsupported_after = 0
+    audit_flagged = 0
+    audit_failed = 0
+    audit_rows = []
     blocked_before = 0
     replies = 0
     calls_per_visit = []
@@ -125,16 +128,37 @@ async def eval_visits(router_name: str, cases: dict) -> dict:
                 plan = ReplyPlan(turn_class=res["turn_class"], reply_ko=reply,
                                  evidence=[e["id"] for e in res["evidence"]])
                 unsupported_after += not check_rules(plan, sess.card).ok
+                # Independent audit: a separate Spark call judges whether the spoken reply asserts
+                # anything beyond its cited facts. Not part of the live path.
+                audit = await check_model(plan, sess.card, spark_provider(s))
+                if not audit.ok:
+                    if any(r.startswith("rule5_check_failed") for r in audit.reasons):
+                        audit_failed += 1
+                    else:
+                        audit_flagged += 1
+                        audit_rows.append({"turn": t["ko"], "reply_ko": reply, "evidence": plan.evidence,
+                                           "reason": audit.reasons})
             if res["ask_back"] and t.get("patient_answer"):
                 out = await sess.patient_answer(res["ask_back"]["id"], t["patient_answer"])
                 calls += 1 + (1 if s.verifier_model_check else 0)
-                _ = out
+                rr = out[0] if out and out[0].get("type") == "relay_result" else None
+                if rr and rr.get("reply_ko") and not rr.get("blocked"):
+                    replies += 1
+                    plan = ReplyPlan(turn_class="on_card", reply_ko=rr["reply_ko"], evidence=[rr["fact_id"]])
+                    audit = await check_model(plan, sess.card, spark_provider(s))
+                    if not audit.ok and not any(r.startswith("rule5_check_failed") for r in audit.reasons):
+                        audit_flagged += 1
+                        audit_rows.append({"turn": t["patient_answer"], "reply_ko": rr["reply_ko"],
+                                           "evidence": plan.evidence, "reason": audit.reasons})
+                    elif not audit.ok:
+                        audit_failed += 1
         blocked_before += len(sess.blocked_log)
         calls_per_visit.append(calls)
     return {
         "router": router_name, "visits": len(plays),
         "decision_escalation": f"{escalated}/{decisions}",
         "unsupported_claims_after_verifier": unsupported_after, "spoken_replies": replies,
+        "audit_flagged": audit_flagged, "audit_failed": audit_failed, "audit_rows": audit_rows,
         "replies_blocked_by_verifier": blocked_before,
         "latency_ms": {k: {"p50": pct(v, 0.5), "p95": pct(v, 0.95)} for k, v in stage.items()},
         "api_calls_per_visit_mean": round(statistics.mean(calls_per_visit), 2) if calls_per_visit else None,
@@ -216,8 +240,9 @@ def to_markdown(r: dict) -> str:
         L += [f"### Router: {v['router']}", "",
               f"- Visits: {v['visits']}",
               f"- Decision escalation (needs_decision -> ask-back): **{v['decision_escalation']}**",
-              f"- Unsupported claims after verifier: **{v['unsupported_claims_after_verifier']}** "
-              f"of {v['spoken_replies']} spoken replies",
+              f"- Spoken replies (excluding fixed phrases): {v['spoken_replies']}",
+              f"- Independent Spark audit flagged as unsupported: **{v['audit_flagged']}** of {v['spoken_replies']}"
+              + (f" (audit call failed on {v['audit_failed']})" if v['audit_failed'] else ""),
               f"- Replies blocked by the verifier (became ask-backs): {v['replies_blocked_by_verifier']}",
               f"- Meta API calls per visit (mean): {v['api_calls_per_visit_mean']}", "",
               "| Stage | p50 ms | p95 ms |", "|---|---|---|"]
@@ -245,7 +270,7 @@ async def main() -> None:
     utts = [json.loads(l) for l in (MOCK / "utterances.jsonl").read_text(encoding="utf-8").splitlines() if l.strip()]
     assert all(u["label"] in TURN_CLASSES for u in utts)
     routers = [x for x in args.routers.split(",") if x]
-    visit_routers = [x for x in (args.visit_routers or ",".join(r for r in routers if r != "rules") or "spark").split(",") if x]
+    visit_routers = [x for x in (args.visit_routers or "rules").split(",") if x]
     result = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "fake": s.use_fake, "spark_model": s.spark_model,
