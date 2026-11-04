@@ -1,0 +1,32 @@
+# Medero API on Fly.io. Change `app` to the name you create with `fly apps create`.
+app = "medero-api"
+primary_region = "nrt"   # Tokyo, closest Fly region to Korea
+
+[build]
+  dockerfile = "api/Dockerfile"
+
+[env]
+  DEMO_MODE = "1"
+  ROUTER_PROVIDER = "rules"
+  DOC_PROVIDER = "modal"
+  FIND_PROVIDER = "modal"
+  REASONING_EFFORT = "minimal"
+  MODEL_TIMEOUT_S = "15"
+  VERIFIER_MODEL_CHECK = "0"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # sessions live in memory (guardrail 10), so exactly one machine, always on
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    soft_limit = 200
+    hard_limit = 250
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

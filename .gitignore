@@ -22,3 +22,4 @@ eval/results/offline/
 data/mock/.fonts/
 /IMG_*
 video/shots/chrome-prof/
+web/.next-build/
