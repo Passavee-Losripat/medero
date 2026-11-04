@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Icon from "@/components/Icon";
+import RedactEditor from "@/components/RedactEditor";
 import SpeakButton from "@/components/SpeakButton";
-import { load, postForm } from "@/lib/api";
+import { api, load, postForm } from "@/lib/api";
 import { t } from "@/lib/i18n";
 
 export default function Prescription() {
@@ -13,11 +14,22 @@ export default function Prescription() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [bigKo, setBigKo] = useState(false);
-  useEffect(() => setLang(load("lang") || "en"), []);
+  const [localReader, setLocalReader] = useState<boolean | null>(null);
+  const [toCover, setToCover] = useState<File | null>(null);
+  useEffect(() => {
+    setLang(load("lang") || "en");
+    // documents are read on our own server when DOC_PROVIDER is local/modal; otherwise cover identifiers first
+    api("/health").then((h) => setLocalReader(h.doc_reader === "local" || h.doc_reader === "modal")).catch(() => setLocalReader(false));
+  }, []);
   const s = t(lang);
 
-  async function onFile(f: File | undefined) {
+  function onFile(f: File | undefined) {
     if (!f) return;
+    setRes(null); setErr("");
+    if (localReader) upload(f); else { setPreview(null); setToCover(f); }
+  }
+  async function upload(f: File) {
+    setToCover(null);
     setPreview(URL.createObjectURL(f)); setBusy(true); setErr(""); setRes(null);
     try { setRes(await postForm("/prescription", { file: f, lang })); }
     catch (e: any) { setErr(String(e.message || e)); } finally { setBusy(false); }
@@ -47,6 +59,10 @@ export default function Prescription() {
           </label>
         </div>
         <button className="ghost" style={{ alignSelf: "center" }} disabled={busy} onClick={trySample}>✨ {s.trySample}</button>
+        {toCover && (
+          <RedactEditor file={toCover} onDone={upload} onCancel={() => setToCover(null)}
+            labels={{ title: s.coverTitle, help: s.coverHelp, reset: s.coverReset, send: s.coverSend, cancel: s.cancel }} />
+        )}
         {preview && <img src={preview} alt="uploaded label" className="rx-preview" />}
         {busy && <p className="muted center">{s.reading}</p>}
         {err && <div className="banner">{err}</div>}
