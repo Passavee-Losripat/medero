@@ -42,7 +42,7 @@ Confusions: needs_fact->on_card ×2, on_card->needs_fact ×2
 
 ## Prescription fields (exact match, MOCK)
 
-**Reader: spark (muse-spark-1.3)** · latency p50 8829.2 ms
+**Reader: spark (muse-spark-1.3)** · latency p50 8372.0 ms
 
 | Set | Docs | Fields | Accuracy | Form checks |
 |---|---|---|---|---|
@@ -50,13 +50,13 @@ Confusions: needs_fact->on_card ×2, on_card->needs_fact ×2
 | Medicine-bag labels, simulated phone photo | 3 | 30 | 100.0% | — |
 | Clinic prescription forms (처방전), simulated phone photo | 2 | 48 | 97.9% | 12/12 |
 
-**Reader: modal-glimmer (muse-glimmer-30B)** · latency p50 37042.4 ms
+**Reader: modal-glimmer (muse-glimmer-30B)** · latency p50 34233.2 ms
 
 | Set | Docs | Fields | Accuracy | Form checks |
 |---|---|---|---|---|
-| Medicine-bag labels, clean | 3 | 30 | 83.3% | — |
-| Medicine-bag labels, simulated phone photo | 3 | 30 | 90.0% | — |
-| Clinic prescription forms (처방전), simulated phone photo | 2 | 48 | 97.9% | 10/12 |
+| Medicine-bag labels, clean | 3 | 30 | 96.7% | — |
+| Medicine-bag labels, simulated phone photo | 3 | 30 | 80.0% | — |
+| Clinic prescription forms (처방전), simulated phone photo | 2 | 48 | 97.9% | 12/12 |
 
 Form checks: document kind, valid-for days, issue date, disease code, disease-code request shown only when the box is blank, handwritten note detected.
 
@@ -67,3 +67,5 @@ Form checks: document kind, valid-for days, issue date, disease code, disease-co
 ## Not measured here
 
 - Transcription quality: spot-check recorded role-plays by hand (see docs/api-notes.md).
+
+> Prescription section re-measured after the MOCK images were re-rendered with OFL fonts (2026-11-05).

@@ -126,14 +126,14 @@ free) and can switch with `ROUTER_PROVIDER`.
 | Doctor's words translated for the patient / flagged by the number-negation check | 17 / 1 |
 | Doctor turn to Korean reply, p50 / p95 (text input) | 4.4 s / 7.7 s (above the 2.5 s target) |
 
-**Documents (exact field match, MOCK)**
+**Documents (exact field match, MOCK; re-measured after re-rendering the images with OFL fonts)**
 
 | Set | Spark (API) | Glimmer (our GPU) |
 |---|---|---|
-| Medicine-bag labels, clean (30 fields) | 100% | 83.3% |
-| Medicine-bag labels, simulated phone photo (30) | 100% | 90.0% |
-| Clinic prescription forms 처방전, phone photo (48) | 97.9%, form checks 12/12 | 97.9%, form checks 10/12 |
-| Reader latency p50 | 8.8 s | 37.0 s |
+| Medicine-bag labels, clean (30 fields) | 100% | 96.7% |
+| Medicine-bag labels, simulated phone photo (30) | 100% | 80.0% |
+| Clinic prescription forms 처방전, phone photo (48) | 97.9%, form checks 12/12 | 97.9%, form checks 12/12 |
+| Reader latency p50 | 8.4 s | 34.2 s |
 | Insurer checklist from a MOCK PDF | 7 / 7 documents | — |
 | Missing insurance documents, 4 MOCK sets | 4 / 4 | — |
 
