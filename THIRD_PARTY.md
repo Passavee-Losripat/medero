@@ -46,6 +46,10 @@ Every outside dependency, model and asset, with its license. Versions are pinned
 
 ## Fonts and assets
 
+- Demo video background music: by **AtlasAudio** from **Pixabay**
+  (https://pixabay.com/users/atlasaudio-54514918/, Pixabay item 613514), used under the Pixabay Content License
+  (free use, attribution not required; credited in the video description). Only in the demo video, not in the app.
+
 - MOCK prescription images in `data/mock/prescriptions/` (labels and 처방전 forms, clean and simulated phone
   photos) are rendered by `data/mock/render_mock_docs.py` with **Noto Sans KR** (print) and **Nanum Pen Script**
   (handwritten note), both from google/fonts under the **SIL Open Font License 1.1**. The fonts are downloaded at
