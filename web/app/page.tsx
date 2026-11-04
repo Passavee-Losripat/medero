@@ -33,7 +33,7 @@ function Welcome() {
     <main className="welcome fade-in">
       <div>
         <div className="row between" style={{ marginTop: 8 }}>
-          <span className="brand">Medero</span>
+          <span className="brand"><img src="/logo.png" alt="" />Medero</span>
           <div className="seg" role="group" aria-label={s.language}>
             {LANGS.map((l) => (
               <button key={l.code} className={l.code === lang ? "on" : ""} onClick={() => setLang(l.code)}>{l.label}</button>
@@ -43,7 +43,10 @@ function Welcome() {
         <div style={{ marginTop: 28 }}><Hero /></div>
       </div>
       <div>
-        <h1 className="brand-big">Medero</h1>
+        <div className="row" style={{ gap: 14 }}>
+          <img src="/logo.png" alt="Medero logo" width={64} height={64} style={{ borderRadius: 16 }} />
+          <h1 className="brand-big">Medero</h1>
+        </div>
         <p className="tagline" style={{ fontSize: "1.2rem", margin: "6px 0 10px", fontWeight: 650 }}>
           <span>{s.welcome1}</span><br /><span>{s.welcome2}</span>
         </p>
