@@ -5,9 +5,10 @@ export const metadata: Metadata = {
   title: "Medero",
   description: "A communication companion for patients at Korean clinics. Not medical advice.",
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/icon.svg" },
+  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  appleWebApp: { capable: true, title: "Medero", statusBarStyle: "default" },
 };
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#1a6fc4" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#1a6fc4" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

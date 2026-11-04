@@ -36,7 +36,10 @@ SESSION_TTL_S = 2 * 3600
 
 app = FastAPI(title="Medero API")
 settings = get_settings()
+# localhost plus private LAN addresses, so a phone/iPad on the same Wi-Fi can use the dev server
 app.add_middleware(CORSMiddleware, allow_origins=[settings.web_origin, "http://localhost:3000"],
+                   allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|"
+                                      r"172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?",
                    allow_methods=["*"], allow_headers=["*"])
 
 # ---------------- in-memory session store (guardrail 10: nothing persisted) ----------------

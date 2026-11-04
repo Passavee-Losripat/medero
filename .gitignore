@@ -11,3 +11,4 @@ eval/results/*.json.tmp
 web/next-env.d.ts
 web/tsconfig.tsbuildinfo
 web/.env.local
+certs/

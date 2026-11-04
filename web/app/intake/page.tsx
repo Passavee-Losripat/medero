@@ -80,7 +80,7 @@ export default function Intake() {
   return (
     <>
       <Header right={demo ? <span className="badge mock">DEMO · MOCK</span> : null} />
-      <main className="stack">
+      <main className="stack narrow">
         <h1>{s.intakeTitle}</h1>
         <p className="muted">{s.intakeHelp}</p>
         <div className="card stack">
@@ -101,10 +101,16 @@ export default function Intake() {
             <label className="row muted"><input type="checkbox" checked={f.medicationsNone} onChange={set("medicationsNone")} /> {s.noneKnown}</label>
           </div>
           <div>
-            <label>{s.insuranceType}</label>
-            <select value={f.insurance_type} onChange={set("insurance_type")}>
-              {Object.entries(s.ins).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
+            <label id="ins-label">{s.insuranceType}</label>
+            <div className="choices" role="radiogroup" aria-labelledby="ins-label">
+              {Object.entries(s.ins).map(([k, v]) => (
+                <label key={k} className="choice">
+                  <input type="radio" name="insurance_type" value={k} checked={f.insurance_type === k}
+                    onChange={() => setF({ ...f, insurance_type: k })} />
+                  <span className="dot" aria-hidden="true" />{v}
+                </label>
+              ))}
+            </div>
           </div>
         </div>
         {err && <div className="banner">{err}</div>}

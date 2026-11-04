@@ -36,7 +36,7 @@ export default function Insurance() {
   return (
     <>
       <Header />
-      <main className="stack">
+      <main className="stack narrow">
         <h1>{s.insurance}</h1>
         <div className="banner">{pack?.notice || s.insurerHelp}</div>
         <div className="card stack">

@@ -1,12 +1,20 @@
 // Thin client for the Medero API. The model key never reaches the browser.
-export const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000").replace(/\/$/, "");
+// On a phone/iPad the page is opened at the Mac's LAN address, so "localhost" would point at the
+// phone itself. Default: same host and protocol as the page, port 8000.
+export function apiBase(): string {
+  const env = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/$/, "");
+  if (typeof window === "undefined") return env || "http://localhost:8000";
+  const pageHost = window.location.hostname;
+  if (env && !(/localhost|127\.0\.0\.1/.test(env) && pageHost !== "localhost" && pageHost !== "127.0.0.1")) return env;
+  return `${window.location.protocol}//${pageHost}:8000`;
+}
 
 export function wsUrl(path: string): string {
-  return API_BASE.replace(/^http/, "ws") + path;
+  return apiBase().replace(/^http/, "ws") + path;
 }
 
 export async function api<T = any>(path: string, init?: RequestInit): Promise<T> {
-  const r = await fetch(API_BASE + path, init);
+  const r = await fetch(apiBase() + path, init);
   const body = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error((body && (body.detail || body.error)) || `HTTP ${r.status}`);
   return body as T;

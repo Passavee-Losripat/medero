@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
-import { API_BASE } from "@/lib/api";
+import { apiBase } from "@/lib/api";
 
 // Minimal markdown renderer for eval/results/latest.md (headings, lists, tables, bold, code).
 function inline(s: string): React.ReactNode[] {
@@ -34,6 +34,6 @@ function render(md: string) {
 
 export default function Results() {
   const [md, setMd] = useState<string | null>(null);
-  useEffect(() => { fetch(API_BASE + "/eval/latest").then((r) => r.text()).then(setMd).catch(() => setMd("API not reachable.")); }, []);
+  useEffect(() => { fetch(apiBase() + "/eval/latest").then((r) => r.text()).then(setMd).catch(() => setMd("API not reachable.")); }, []);
   return (<><Header right={<span className="badge mock">MOCK DATA</span>} /><main>{md === null ? <p className="muted">…</p> : render(md)}</main></>);
 }

@@ -50,12 +50,12 @@ export default function CardPage() {
   return (
     <>
       <Header right={<span className="badge">{card.alias}</span>} />
-      <main className="stack">
+      <main className="stack narrow">
         <h1>{s.cardTitle}</h1>
         <p className="muted">{s.cardHelp}</p>
         <div className="card">
           {facts.map((f) => (
-            <div className="fact" key={f.id}>
+            <label className="fact" key={f.id} style={{ fontWeight: 400, margin: 0 }}>
               <input type="checkbox" aria-label={f.id} disabled={!f.value || !!approved}
                 checked={!!f.value && !!checked[f.id]} onChange={(e) => setChecked({ ...checked, [f.id]: e.target.checked })} />
               <div className="grow">
@@ -65,7 +65,7 @@ export default function CardPage() {
                   <div className="ko" lang="ko">{f.value_ko}</div>
                 )}
               </div>
-            </div>
+            </label>
           ))}
         </div>
         <div className="card">

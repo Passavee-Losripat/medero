@@ -113,8 +113,8 @@ export default function Visit() {
     <Header right={<>
       {simulated && <span className="badge mock">{s.simulated}</span>}
       {fake && <span className="badge danger">FAKE</span>}
-      <label className="row muted" style={{ margin: 0 }}><input type="checkbox" checked={big} onChange={(e) => setBig(e.target.checked)} /> {s.bigText}</label>
-      <label className="row muted" style={{ margin: 0 }}><input type="checkbox" checked={simulated} onChange={(e) => setSimulated(e.target.checked)} /> {s.simulated}</label>
+      <label className="toggle"><input type="checkbox" checked={big} onChange={(e) => setBig(e.target.checked)} /> {s.bigText}</label>
+      <label className="toggle"><input type="checkbox" checked={simulated} onChange={(e) => setSimulated(e.target.checked)} /> {s.simulated}</label>
     </>} />
   );
 
@@ -195,7 +195,7 @@ export default function Visit() {
               </div>
             )}
             <div ref={endRef} />
-            <div className="card stack">
+            <div className="composer stack">
               <label>{s.clinicianLine}</label>
               <div className="row">
                 <input type="text" lang="ko" placeholder={s.typeHere} value={text} style={{ flex: 1 }}
