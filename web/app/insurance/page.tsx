@@ -59,7 +59,11 @@ export default function Insurance() {
         <div className="card stack">
           <h2>{s.insurerChecklist}</h2>
           <p className="muted">{s.insurerHelp}</p>
-          <input type="file" accept="application/pdf,image/*" onChange={(e) => parse(e.target.files?.[0])} />
+          <div className="pick" style={{ gridTemplateColumns: "1fr" }}>
+            <label className="btn"><Icon name="doc" size={28} />{s.uploadChecklist}
+              <input type="file" accept="application/pdf,image/*" disabled={busy}
+                onChange={(e) => { parse(e.target.files?.[0]); e.target.value = ""; }} /></label>
+          </div>
           <textarea placeholder="Paste the insurer's text…" value={text} onChange={(e) => setText(e.target.value)} />
           <button disabled={busy || !text.trim()} onClick={() => parse()}>{s.parse}</button>
           <button className="ghost" style={{ alignSelf: "center" }} disabled={busy} onClick={sampleChecklist}>✨ {s.sampleChecklist}</button>

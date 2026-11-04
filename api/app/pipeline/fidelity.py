@@ -50,7 +50,7 @@ def numbers(text: str) -> set[str]:
 
 # Negation cues. Korean "안" only as a separate word (not 안약 / 안과); "못" likewise.
 _NEG = {
-    "ko": re.compile(r"없|않|아니|(?<![가-힣])안(?=\s)|(?<![가-힣])못(?=\s)|말고|마세요|금지"),
+    "ko": re.compile(r"없|않|아니|(?<![가-힣])안(?=\s)|(?<![가-힣])못(?=\s)|말고|마세요|금지|불가"),
     "en": re.compile(r"\b(no|not|none|never|without|don't|doesn't|didn't|isn't|aren't|can't|cannot|haven't|hasn't|nothing)\b|n't\b", re.I),
     "th": re.compile(r"ไม่|ห้าม|อย่า|ไม่มี|ไม่เคย"),
 }

@@ -59,7 +59,8 @@ export default function Visit() {
     const sock = new WebSocket(wsUrl(`/sessions/${id}/visit`));
     ws.current = sock;
     sock.onopen = () => sock.send(JSON.stringify({ type: "start" }));
-    sock.onclose = () => setClosed(true);
+    // only the live socket counts (React dev mode mounts twice and closes the first one)
+    sock.onclose = () => { if (ws.current === sock) setClosed(true); };
     sock.onmessage = (m) => handle(JSON.parse(m.data));
     return () => { sock.close(); hf.current?.stop(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps

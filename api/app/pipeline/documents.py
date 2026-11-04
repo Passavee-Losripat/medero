@@ -111,7 +111,9 @@ async def read_prescription(data: bytes, mime: str, lang: str, provider: LLMProv
         if item.handwritten_note or item.truncated:
             item.confidence = min(item.confidence, 0.6)
         item.flags_patient_lang = _item_flags(item, lang)
-        printed = " ".join(x for x in [item.dose, item.times_per_day, item.days, item.instructions_ko] if x)
+        # the gloss may repeat the drug name (e.g. 10밀리그램), so the name counts as printed text too
+        printed = " ".join(x for x in [item.drug_name_ko, item.dose, item.times_per_day, item.days,
+                                       item.substitution_ko, item.instructions_ko, item.handwritten_note] if x)
         if fidelity.compare(printed, item.gloss_patient_lang):
             # the translation's numbers differ from the printed ones: the printed Korean is the reference
             item.confidence = min(item.confidence, 0.5)

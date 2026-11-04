@@ -251,7 +251,7 @@ async def test_prescription_form_notes_are_fixed_and_identifiers_scrubbed():
                 "items": [{"drug_name_ko": "세레노정(MOCK)", "dose": "1", "times_per_day": "2", "days": "5",
                            "substitution_ko": "불가", "instructions_ko": "식후30분", "not_covered": True,
                            "handwritten_note": "→아침, 저녁", "truncated": False,
-                           "gloss_patient_lang": "Patient 990101-1234567: 1 tablet, 2 times a day, 5 days, 30 minutes after meals", "confidence": 0.95}]}
+                           "gloss_patient_lang": "Patient 990101-1234567: 1 tablet, 2 times a day, 5 days, no substitute, 30 minutes after meals", "confidence": 0.95}]}
 
     r = await documents.read_prescription(b"x", "image/png", "en", FakeProvider(handler=form))
     it = r.items[0]
