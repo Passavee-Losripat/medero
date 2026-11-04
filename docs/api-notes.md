@@ -5,6 +5,7 @@ VERIFIED, the code treats it as an assumption.
 
 | Item | Status | Assumption in code | Where |
 |---|---|---|---|
+| `GET /v1/models` with bearer key | **VERIFIED 2026-11-04** (curl). Key has: `muse-spark-1.3`, `muse-spark-1.2`, `muse-spark-1.1`, `muse-spark-1.3-contributor`, `muse-spark-1.2-contributor`, `muse-voice-transcribe-1.0`, `muse-image-1.0`, `sam-3.1`. Medero uses `muse-spark-1.3` (not `-contributor`; its data-use terms are unchecked) | `.env` `SPARK_MODEL` |
 | Chat Completions via OpenAI SDK at `https://api.meta.ai/v1` | NOT YET TESTED (no key yet) | `AsyncOpenAI(base_url=..., api_key=MODEL_API_KEY)` | `api/app/providers/llm.py` |
 | Structured output | NOT YET TESTED | `response_format={"type":"json_schema","json_schema":{name, schema, strict:false}}`; output parsed tolerantly and validated by Pydantic | `llm.py` |
 | `reasoning_effort` on chat completions | NOT YET TESTED | sent as `reasoning_effort="low"`; set `REASONING_EFFORT=` (empty) to stop sending it | `config.py` |
