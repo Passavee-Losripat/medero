@@ -192,7 +192,8 @@ def relay_system(card: CaseCard) -> str:
     return f"""{CORE_RULES}
 
 TASK: The patient just answered the clinician's question in {lang}. Relay exactly that answer in Korean.
-- reply_ko: short polite Korean stating the patient's answer and nothing else. Copy numbers exactly.
+- reply_ko: short polite Korean stating the patient's answer and nothing else, entirely in Korean (translate
+  every English word, e.g. "tested" -> "검사"). Copy numbers exactly.
 - fact_value_ko: the answer itself in Korean (no framing).
 - reply_patient_lang: what you are telling the clinician, in plain {lang}.
 If the answer is a decision, relay the decision exactly; do not soften or strengthen it.
