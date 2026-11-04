@@ -172,24 +172,44 @@ async def eval_rx() -> dict:
     s = get_settings()
     if s.use_fake:
         return {"skipped": "no MODEL_API_KEY"}
-    slips = json.loads((MOCK / "prescriptions" / "slips.json").read_text(encoding="utf-8"))["slips"]
+    rx = MOCK / "prescriptions"
+    slips = json.loads((rx / "slips.json").read_text(encoding="utf-8"))["slips"]
+    forms = json.loads((rx / "forms.json").read_text(encoding="utf-8"))["forms"]
     fields = ["drug_name_ko", "dose", "times_per_day", "days", "instructions_ko"]
-    total = right = 0
-    lat = []
-    for slip in slips:
-        img = MOCK / "prescriptions" / f"{slip['id']}.png"
-        if not img.exists():
-            return {"skipped": "run `make mock-docs` first"}
-        t0 = time.perf_counter()
-        reading = await documents.read_prescription(img.read_bytes(), "image/png", "en", spark_provider(s))
-        lat.append((time.perf_counter() - t0) * 1000)
-        for i, truth in enumerate(slip["items"]):
-            got = reading.items[i].model_dump() if i < len(reading.items) else {}
-            for f in fields:
-                total += 1
-                right += _norm(got.get(f)) == _norm(truth[f])
-    return {"slips": len(slips), "fields": total, "field_accuracy": round(right / total, 3) if total else None,
-            "latency_p50_ms": pct(lat, 0.5)}
+    form_fields = fields + ["substitution_ko", "not_covered", "truncated"]
+    out, lat = {}, []
+    # labels, clean and as simulated phone photos; clinic forms (처방전) as phone photos
+    runs = [("labels", slips, ".png", fields), ("labels_photo", slips, "_photo.jpg", fields),
+            ("forms_photo", forms, "_photo.jpg", form_fields)]
+    for name, docs, suffix, flds in runs:
+        total = right = 0
+        doc_ok = doc_total = 0
+        for doc in docs:
+            img = rx / f"{doc['id']}{suffix}"
+            if not img.exists():
+                return {"skipped": "run `make mock-docs` first"}
+            t0 = time.perf_counter()
+            reading = await documents.read_prescription(img.read_bytes(), "image/jpeg" if suffix.endswith("jpg")
+                                                        else "image/png", "en", spark_provider(s))
+            lat.append((time.perf_counter() - t0) * 1000)
+            for i, truth in enumerate(doc["items"]):
+                got = reading.items[i].model_dump() if i < len(reading.items) else {}
+                for f in flds:
+                    want = truth.get("substitution") if f == "substitution_ko" else truth.get(f, False)
+                    total += 1
+                    right += _norm(got.get(f)) == _norm(want)
+            if name == "forms_photo":
+                checks = [reading.doc_kind == "prescription_form", reading.valid_days == doc["valid_days"],
+                          reading.issued_date == doc["issued"], (reading.disease_code or None) == doc["disease_code"],
+                          bool(reading.request_ko) == (doc["disease_code"] is None),
+                          any(i.handwritten_note for i in reading.items) == any(x.get("handwritten") for x in doc["items"])]
+                doc_ok += sum(checks)
+                doc_total += len(checks)
+        out[name] = {"docs": len(docs), "fields": total, "field_accuracy": round(right / total, 3) if total else None}
+        if doc_total:
+            out[name]["form_checks"] = f"{doc_ok}/{doc_total}"
+    out["latency_p50_ms"] = pct(lat, 0.5)
+    return out
 
 
 def _norm(v) -> str:
@@ -250,9 +270,20 @@ def to_markdown(r: dict) -> str:
             L.append(f"| {k} | {s['p50']} | {s['p95']} |")
         L.append("")
     rx = r["prescription"]
-    L += ["## Prescription fields", "",
-          f"- {'skipped: ' + rx['skipped'] if 'skipped' in rx else str(rx['fields']) + ' fields on ' + str(rx['slips']) + ' MOCK slips, exact-match accuracy ' + format(rx['field_accuracy'], '.1%')}",
-          "", "## Claim completeness (deterministic matcher)", "",
+    L += ["## Prescription fields (exact match, MOCK)", ""]
+    if "skipped" in rx:
+        L.append(f"- skipped: {rx['skipped']}")
+    else:
+        names = {"labels": "Medicine-bag labels, clean", "labels_photo": "Medicine-bag labels, simulated phone photo",
+                 "forms_photo": "Clinic prescription forms (처방전), simulated phone photo"}
+        L += ["| Set | Docs | Fields | Accuracy | Form checks |", "|---|---|---|---|---|"]
+        for k, n in names.items():
+            if k in rx:
+                x = rx[k]
+                L.append(f"| {n} | {x['docs']} | {x['fields']} | {format(x['field_accuracy'], '.1%')} | {x.get('form_checks', '—')} |")
+        L += ["", "Form checks: document kind, valid-for days, issue date, disease code, disease-code request shown "
+              "only when the box is blank, handwritten note detected.", f"- Reader latency p50: {rx['latency_p50_ms']} ms"]
+    L += ["", "## Claim completeness (deterministic matcher)", "",
           f"- `missing` matched the known gaps in **{r['claims']['exact_match']}** MOCK receipt sets", ""]
     L += ["## Not measured here", "", "- Transcription quality: spot-check recorded role-plays by hand (see docs/api-notes.md).", ""]
     return "\n".join(L)

@@ -1,0 +1,19 @@
+{"_label": "MOCK prescription forms (처방전) laid out like the standard Korean clinic form. Clinics, doctors, patients and drug names are INVENTED and marked (MOCK). Not real medicines. Layout studied from the developer's own form; no text or data copied from it.",
+ "forms": [
+  {"id": "rx_form01", "patient": "Mali (MOCK)", "insurance_box": "기타", "issued": "2026-10-31", "number": "제 00012 호",
+   "clinic": "메데로안과의원(MOCK)", "doctor": "홍길동(MOCK)", "disease_code": null, "valid_days": "3",
+   "items": [
+    {"drug_name_ko": "루미아점안액(MOCK)", "dose": "1", "times_per_day": "4", "days": "5", "substitution": "불가", "instructions_ko": "양안 점안", "not_covered": false},
+    {"drug_name_ko": "세레노정10밀리그램(MOCK)", "dose": "1", "times_per_day": "2", "days": "5", "substitution": "불가", "instructions_ko": "식후30분", "not_covered": false,
+     "handwritten": "→아침, 저녁"},
+    {"drug_name_ko": "아이케어연고(MOCK)", "dose": "1", "times_per_day": "1", "days": "5", "substitution": "불가", "instructions_ko": "취침 전", "not_covered": true}
+   ]},
+  {"id": "rx_form02", "patient": "Ploy (MOCK)", "insurance_box": "건강보험", "issued": "2026-11-01", "number": "제 00207 호",
+   "clinic": "누리이비인후과의원(MOCK)", "doctor": "김하늘(MOCK)", "disease_code": "J02.9", "valid_days": "7",
+   "items": [
+    {"drug_name_ko": "아로민캡슐250밀리그램(세파", "full_name": "아로민캡슐250밀리그램(세파로민)(MOCK)", "truncated": true,
+     "dose": "1", "times_per_day": "3", "days": "3", "substitution": "불가", "instructions_ko": "식후30분", "not_covered": false},
+    {"drug_name_ko": "피오나정(MOCK)", "dose": "1", "times_per_day": "3", "days": "3", "substitution": "가능", "instructions_ko": "식후30분", "not_covered": false},
+    {"drug_name_ko": "드롭솔가글액(MOCK)", "dose": "1", "times_per_day": "3", "days": "3", "substitution": "가능", "instructions_ko": "가글 후 뱉기", "not_covered": true}
+   ]}
+ ]}

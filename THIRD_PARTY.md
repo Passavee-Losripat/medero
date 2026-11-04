@@ -47,7 +47,7 @@ Every outside dependency, model and asset, with its license. Versions are pinned
 ## Fonts and assets
 
 - MOCK prescription images in `data/mock/prescriptions/*.png` were rendered by
-  `data/mock/render_mock_docs.py` using the macOS system font Apple SD Gothic Neo.
+  `data/mock/render_mock_docs.py` using the macOS system font Apple SD Gothic Neo and AppleMyungjo (handwriting-style note).
   **Open item:** before submission, re-render with an OFL font (e.g. Noto Sans KR,
   SIL OFL 1.1) by setting `MOCK_FONT=/path/to/NotoSansKR.ttf make mock-docs`, so the
   committed images use a font that is clearly licensed for redistribution.

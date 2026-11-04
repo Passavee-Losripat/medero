@@ -240,3 +240,35 @@ async def test_confirmed_fact_keeps_question():
     out = await sess.patient_answer(ask["id"], "none")
     f = sess.card.fact(out[0]["fact_id"])
     assert f.answers_question == "알레르기 있으세요?"
+
+
+async def test_prescription_form_notes_are_fixed_and_identifiers_scrubbed():
+    from app.pipeline import documents
+
+    def form(task, system, user):
+        return {"doc_kind": "prescription_form", "issued_date": "2026-10-31", "valid_days": "3",
+                "disease_code": None, "disease_code_box": "blank", "untranslated_terms": [],
+                "items": [{"drug_name_ko": "세레노정(MOCK)", "dose": "1", "times_per_day": "2", "days": "5",
+                           "substitution_ko": "불가", "instructions_ko": "식후30분", "not_covered": True,
+                           "handwritten_note": "→아침, 저녁", "truncated": False,
+                           "gloss_patient_lang": "Patient 990101-1234567: 1 tablet twice a day", "confidence": 0.95}]}
+
+    r = await documents.read_prescription(b"x", "image/png", "en", FakeProvider(handler=form))
+    it = r.items[0]
+    assert "990101" not in it.gloss_patient_lang
+    assert it.confidence <= 0.6 and r.low_confidence          # handwriting is never smoothed over
+    assert len(it.flags_patient_lang) == 3                    # not covered, no substitute, handwritten
+    assert r.valid_days == "3" and r.disease_code_blank is True
+    assert r.request_ko == fx.DISEASE_CODE_REQUEST_KO
+    assert all(n in fx.PATIENT_TEXT["en"].values() or "3 days" in n for n in r.notes_patient_lang)
+
+
+async def test_prescription_code_printed_no_request():
+    from app.pipeline import documents
+
+    def form(task, system, user):
+        return {"doc_kind": "prescription_form", "issued_date": None, "valid_days": "seven",
+                "disease_code": "J02.9", "disease_code_box": "filled", "untranslated_terms": [], "items": []}
+
+    r = await documents.read_prescription(b"x", "image/png", "en", FakeProvider(handler=form))
+    assert r.request_ko is None and r.disease_code == "J02.9" and r.valid_days is None

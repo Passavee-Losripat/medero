@@ -11,6 +11,7 @@ export default function Prescription() {
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [bigKo, setBigKo] = useState(false);
   useEffect(() => setLang(load("lang") || "en"), []);
   const s = t(lang);
 
@@ -22,8 +23,8 @@ export default function Prescription() {
   }
   async function trySample() {
     // MOCK label bundled with the web app so a phone user can try it without the repo
-    const blob = await (await fetch("/samples/rx-mock.jpg")).blob();
-    onFile(new File([blob], "rx-mock.jpg", { type: "image/jpeg" }));
+    const blob = await (await fetch("/samples/rx-form-mock.jpg")).blob();
+    onFile(new File([blob], "rx-form-mock.jpg", { type: "image/jpeg" }));
   }
   return (
     <>
@@ -52,12 +53,32 @@ export default function Prescription() {
           <div className="stack">
             {res.fake_models && <div className="banner">{s.fakeModels}</div>}
             {res.low_confidence && <div className="banner">{s.lowConfidence}</div>}
+            {res.notes_patient_lang?.map((n: string, i: number) => (
+              <div key={i} className="card flat" style={{ margin: 0 }}><Icon name="info" size={18} /> {n}</div>
+            ))}
+            {res.request_ko && (
+              <div className="card stack" style={{ margin: 0 }}>
+                <div className="muted">{s.codeRequest}</div>
+                <div className={bigKo ? "ko-big" : "ko"} lang="ko" style={{ fontWeight: 650 }}>{res.request_ko}</div>
+                <button className="ghost" style={{ alignSelf: "flex-start" }} onClick={() => setBigKo(!bigKo)}>가 {s.bigForStaff}</button>
+              </div>
+            )}
             {res.items.map((it: any, i: number) => (
               <div key={i} className="card stack">
                 <div className="row"><span className="ko-big" lang="ko">{it.drug_name_ko}</span>
                   {it.confidence < 0.7 && <span className="badge warn">{s.lowConfidence}</span>}</div>
-                <div className="ko" lang="ko">{[it.dose, it.times_per_day, it.days, it.instructions_ko].filter(Boolean).join(" · ")}</div>
+                {res.doc_kind === "prescription_form" ? (
+                  <div className="rx-cols">
+                    <span><small>{s.perDose}</small>{it.dose ?? "—"}</span>
+                    <span><small>{s.perDay}</small>{it.times_per_day ?? "—"}</span>
+                    <span><small>{s.daysCol}</small>{it.days ?? "—"}</span>
+                    <span lang="ko"><small>{s.howCol}</small>{it.instructions_ko ?? "—"}</span>
+                  </div>
+                ) : (
+                  <div className="ko" lang="ko">{[it.dose, it.times_per_day, it.days, it.instructions_ko].filter(Boolean).join(" · ")}</div>
+                )}
                 <div>{it.gloss_patient_lang}</div>
+                {it.flags_patient_lang?.map((f: string, j: number) => <div key={j} className="muted" style={{ fontSize: ".92rem" }}>• {f}</div>)}
                 <span className="badge warn">{s.confirmPharmacist}</span>
               </div>
             ))}

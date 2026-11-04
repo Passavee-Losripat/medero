@@ -119,13 +119,26 @@ class PrescriptionItem(BaseModel):
     gloss_patient_lang: str = ""
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     confirm_with_pharmacist: Literal[True] = True
+    # As printed on a clinic prescription form (처방전); never inferred
+    substitution_ko: str | None = None     # 대체가능 column: "가능" / "불가"
+    not_covered: bool = False               # "(비급여)" printed on the line
+    handwritten_note: str | None = None     # pen note next to the line
+    truncated: bool = False                 # name cut off by the column
+    flags_patient_lang: list[str] = Field(default_factory=list)  # fixed text, not generated
 
 
 class PrescriptionReading(BaseModel):
+    doc_kind: Literal["prescription_form", "medicine_bag", "other"] = "other"
     items: list[PrescriptionItem] = Field(default_factory=list)
     untranslated_terms: list[str] = Field(default_factory=list)
     low_confidence: bool = False
     notice_patient_lang: str = ""
+    issued_date: str | None = None
+    valid_days: str | None = None           # 사용기간 교부일로부터 (N)일간, as printed
+    disease_code: str | None = None         # 질병분류기호, as printed
+    disease_code_blank: bool | None = None  # None = could not tell
+    notes_patient_lang: list[str] = Field(default_factory=list)  # fixed text, not generated
+    request_ko: str | None = None           # fixed Korean the patient may choose to show staff
 
 
 class CapturedDoc(BaseModel):

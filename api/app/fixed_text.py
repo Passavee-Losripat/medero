@@ -23,6 +23,12 @@ FALLBACK_NOTE_KO = "잠시 연결이 지연되고 있습니다. 아래는 환자
 
 UNTRANSLATED_FLAG_KO = "(번역 없음 – 확인 필요)"
 
+# The patient may choose to show this to clinic staff when an insurer needs a disease code.
+DISEASE_CODE_REQUEST_KO = (
+    "보험 청구에 필요해서요. 처방전에 질병분류기호를 기재해 주시고, "
+    "진료비 영수증과 진료비 세부내역서도 발급해 주실 수 있을까요?"
+)
+
 PATIENT_TEXT: dict[str, dict[str, str]] = {
     "en": {
         "declined": "The staff prefer to speak with you directly. Show them this screen.",
@@ -32,6 +38,15 @@ PATIENT_TEXT: dict[str, dict[str, str]] = {
         "low_confidence": "Some text was hard to read. Please check it with staff.",
         "transcript_uncertain": "The listening was uncertain. Staff can type the question instead.",
         "summary_notice": "This summary only repeats what the doctor said. It is not medical advice.",
+        "rx_valid": "Printed on the form: valid for {days} days from the issue date{date}. Hand it to a pharmacy within that time.",
+        "rx_keeps": "This copy is kept by the pharmacy (약국보관용). Take a photo before you hand it over; an insurance claim may need it.",
+        "rx_no_code": "The disease code box (질병분류기호) is blank. Some insurers ask for a disease code. If yours does, you can show the clinic the Korean request below. It is your choice.",
+        "rx_code": "Disease code printed on the form: {code}. Medero does not explain codes; your insurer may ask for it.",
+        "rx_not_covered": "Marked (비급여): printed as not covered by national health insurance.",
+        "rx_no_sub": "Printed 대체 불가: no substitute.",
+        "rx_handwritten": "Handwritten note: \"{note}\". Check it with the pharmacist.",
+        "rx_truncated": "The name is cut off on the form. Ask the pharmacist for the full name.",
+        "code_request": "If your insurer needs a disease code, you can show this to the clinic staff:",
     },
     "th": {
         "declined": "เจ้าหน้าที่ต้องการพูดกับคุณโดยตรง กรุณาแสดงหน้าจอนี้ให้เจ้าหน้าที่ดู",
@@ -41,6 +56,15 @@ PATIENT_TEXT: dict[str, dict[str, str]] = {
         "low_confidence": "ข้อความบางส่วนอ่านได้ไม่ชัด กรุณาตรวจสอบกับเจ้าหน้าที่",
         "transcript_uncertain": "การฟังไม่ชัดเจน เจ้าหน้าที่สามารถพิมพ์คำถามแทนได้",
         "summary_notice": "สรุปนี้ทวนเฉพาะสิ่งที่แพทย์พูด ไม่ใช่คำแนะนำทางการแพทย์",
+        "rx_valid": "ที่พิมพ์บนใบสั่งยา: ใช้ได้ {days} วันนับจากวันที่ออก{date} กรุณายื่นที่ร้านขายยาภายในเวลานั้น",
+        "rx_keeps": "ใบนี้ร้านขายยาจะเก็บไว้ (약국보관용) กรุณาถ่ายรูปก่อนยื่น อาจต้องใช้ในการเคลมประกัน",
+        "rx_no_code": "ช่องรหัสโรค (질병분류기호) ว่างอยู่ บริษัทประกันบางแห่งต้องใช้รหัสโรค ถ้าของคุณต้องใช้ คุณสามารถแสดงคำขอภาษาเกาหลีด้านล่างให้คลินิกดูได้ เป็นการตัดสินใจของคุณ",
+        "rx_code": "รหัสโรคที่พิมพ์บนใบสั่งยา: {code} Medero ไม่อธิบายความหมายของรหัส บริษัทประกันอาจขอข้อมูลนี้",
+        "rx_not_covered": "มีเครื่องหมาย (비급여): พิมพ์ไว้ว่าประกันสุขภาพแห่งชาติไม่คุ้มครอง",
+        "rx_no_sub": "พิมพ์ว่า 대체 불가: ห้ามเปลี่ยนเป็นยาอื่น",
+        "rx_handwritten": "มีข้อความเขียนด้วยมือ: \"{note}\" กรุณาตรวจสอบกับเภสัชกร",
+        "rx_truncated": "ชื่อยาถูกตัดบนใบสั่งยา กรุณาถามชื่อเต็มจากเภสัชกร",
+        "code_request": "ถ้าบริษัทประกันต้องใช้รหัสโรค คุณสามารถแสดงข้อความนี้ให้เจ้าหน้าที่คลินิกดูได้:",
     },
 }
 

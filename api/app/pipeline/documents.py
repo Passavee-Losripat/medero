@@ -8,13 +8,17 @@ from __future__ import annotations
 
 import base64
 import io
+import re
 from datetime import date
 
 from .. import fixed_text as fx
 from ..providers.llm import LLMProvider
 from ..safety import glossary, unglossed_korean
 from ..schemas import CapturedDoc, ClaimPack, PrescriptionItem, PrescriptionReading
+from .intake import scrub
 from .prompts import CORE_RULES, glossary_block, lang_name
+
+_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
 
 def image_part(data: bytes, mime: str) -> dict:
@@ -24,58 +28,114 @@ def image_part(data: bytes, mime: str) -> dict:
 
 # ---------------- prescription ----------------
 
+RX_ITEM_FIELDS = ["drug_name_ko", "dose", "times_per_day", "days", "instructions_ko", "substitution_ko",
+                  "not_covered", "handwritten_note", "truncated", "gloss_patient_lang", "confidence"]
+_S, _SN = {"type": "string"}, {"type": ["string", "null"]}
 RX_SCHEMA = {
     "type": "object",
     "properties": {
+        "doc_kind": {"type": "string", "enum": ["prescription_form", "medicine_bag", "other"]},
         "items": {"type": "array", "items": {
             "type": "object",
             "properties": {
-                "drug_name_ko": {"type": "string"}, "dose": {"type": ["string", "null"]},
-                "times_per_day": {"type": ["string", "null"]}, "days": {"type": ["string", "null"]},
-                "instructions_ko": {"type": ["string", "null"]}, "gloss_patient_lang": {"type": "string"},
-                "confidence": {"type": "number"}},
-            "required": ["drug_name_ko", "dose", "times_per_day", "days", "instructions_ko",
-                         "gloss_patient_lang", "confidence"]}},
-        "untranslated_terms": {"type": "array", "items": {"type": "string"}},
+                "drug_name_ko": _S, "dose": _SN, "times_per_day": _SN, "days": _SN, "instructions_ko": _SN,
+                "substitution_ko": _SN, "not_covered": {"type": "boolean"}, "handwritten_note": _SN,
+                "truncated": {"type": "boolean"}, "gloss_patient_lang": _S, "confidence": {"type": "number"}},
+            "required": RX_ITEM_FIELDS}},
+        "issued_date": _SN,
+        "valid_days": _SN,
+        "disease_code": _SN,
+        "disease_code_box": {"type": "string", "enum": ["filled", "blank", "not_found"]},
+        "untranslated_terms": {"type": "array", "items": _S},
     },
-    "required": ["items", "untranslated_terms"],
+    "required": ["doc_kind", "items", "issued_date", "valid_days", "disease_code", "disease_code_box",
+                 "untranslated_terms"],
 }
 
 
 def rx_system(lang: str) -> str:
     return f"""{CORE_RULES}
 
-TASK: Read a Korean prescription or medicine-bag label photo. Copy each printed medicine line exactly.
-- drug_name_ko, dose, times_per_day, days, instructions_ko: copy the printed Korean text exactly; null if not printed.
+TASK: Read a photo of a Korean clinic prescription form (처방전) or a pharmacy medicine-bag label (약봉투).
+Copy what is printed. Never guess text you cannot see.
+- doc_kind: prescription_form for the clinic form with a medicine table; medicine_bag for a pharmacy label.
+- items: one per medicine line. Copy the printed Korean exactly; null if not printed.
+  On a prescription_form the columns are 1회 투약량 -> dose, 1일 투여횟수 -> times_per_day,
+  총 투약일수 -> days, 대체가능 -> substitution_ko, 용법 -> instructions_ko. Copy bare numbers as printed.
+  drug_name_ko: the name without a leading "(비급여)"; set not_covered=true if "(비급여)" is printed on the line.
+  truncated=true if the name is visibly cut off by the column. handwritten_note: any pen note for that line, else null.
 - gloss_patient_lang: a plain {lang_name(lang)} translation of ONLY the printed text for that line.
   Never say whether it is correct, what it treats, or what the patient should take. No advice.
-- confidence: 0..1 for how clearly you could read that line. Use a low value if blurry or cut off.
+- confidence: 0..1 for how clearly you could read that line. Low if blurry, cut off or handwritten.
+- issued_date: 교부일자 as YYYY-MM-DD, else null. valid_days: the number in 사용기간 교부일로부터 (N)일간, else null.
+- disease_code: the 질병분류기호 exactly as printed, else null. disease_code_box: filled / blank / not_found.
+- NEVER output the patient's name, resident registration number, insurance number, or the doctor's name.
 - untranslated_terms: printed words you could not translate with the glossary.
 
 {glossary_block()}"""
 
 
+def _item_flags(item: PrescriptionItem, lang: str) -> list[str]:
+    t = lambda k: fx.patient_text(k, lang)  # noqa: E731
+    flags = []
+    if item.not_covered:
+        flags.append(t("rx_not_covered"))
+    if (item.substitution_ko or "").replace(" ", "") == "불가":
+        flags.append(t("rx_no_sub"))
+    if item.handwritten_note:
+        flags.append(t("rx_handwritten").format(note=item.handwritten_note))
+    if item.truncated:
+        flags.append(t("rx_truncated"))
+    return flags
+
+
 async def read_prescription(data: bytes, mime: str, lang: str, provider: LLMProvider) -> PrescriptionReading:
     res = await provider.json(task="read_prescription", system=rx_system(lang),
-                              user=[{"type": "text", "text": "Read this label."}, image_part(data, mime)],
+                              user=[{"type": "text", "text": "Read this document."}, image_part(data, mime)],
                               schema=RX_SCHEMA, timeout_s=30)
     notice = fx.patient_text("pharmacist", lang)
     if res.data is None:
         return PrescriptionReading(items=[], low_confidence=True,
                                    notice_patient_lang=f"{fx.patient_text('low_confidence', lang)} {notice}")
-    items, flagged = [], set(str(t) for t in res.data.get("untranslated_terms") or [])
-    for raw in res.data.get("items") or []:
+    d = res.data
+    items, flagged = [], set(str(t) for t in d.get("untranslated_terms") or [])
+    for raw in d.get("items") or []:
         try:
-            item = PrescriptionItem(**{k: raw.get(k) for k in PrescriptionItem.model_fields
-                                       if k != "confirm_with_pharmacist"})
+            item = PrescriptionItem(**{k: raw.get(k) for k in RX_ITEM_FIELDS if raw.get(k) is not None})
         except Exception:
             continue
+        # guardrail 10: identifiers never reach the screen even if the model copies them
+        item.gloss_patient_lang = scrub(item.gloss_patient_lang) or ""
+        item.handwritten_note = scrub(item.handwritten_note)
+        if item.handwritten_note or item.truncated:
+            item.confidence = min(item.confidence, 0.6)
+        item.flags_patient_lang = _item_flags(item, lang)
         flagged |= set(unglossed_korean(item.instructions_ko or ""))
         items.append(item)
+    kind = d.get("doc_kind") if d.get("doc_kind") in ("prescription_form", "medicine_bag") else "other"
+    valid = str(d.get("valid_days") or "").strip()
+    valid = valid if valid.isdigit() else None
+    issued = d.get("issued_date") if _DATE.fullmatch(str(d.get("issued_date") or "")) else None
+    code = (str(d.get("disease_code") or "").strip() or None)
+    box = d.get("disease_code_box")
+    blank = None if box == "not_found" else (box == "blank" and not code)
+
+    notes, request = [], None
+    if kind == "prescription_form":
+        t = lambda k: fx.patient_text(k, lang)  # noqa: E731
+        if valid:
+            notes.append(t("rx_valid").format(days=valid, date=f" ({issued})" if issued else ""))
+        notes.append(t("rx_keeps"))
+        if code:
+            notes.append(t("rx_code").format(code=code))
+        elif blank:
+            notes.append(t("rx_no_code"))
+            request = fx.DISEASE_CODE_REQUEST_KO
     low = not items or any(i.confidence < 0.7 for i in items)
     text = notice if not low else f"{fx.patient_text('low_confidence', lang)} {notice}"
-    return PrescriptionReading(items=items, untranslated_terms=sorted(flagged), low_confidence=low,
-                               notice_patient_lang=text)
+    return PrescriptionReading(doc_kind=kind, items=items, untranslated_terms=sorted(flagged), low_confidence=low,
+                               notice_patient_lang=text, issued_date=issued, valid_days=valid, disease_code=code,
+                               disease_code_blank=blank, notes_patient_lang=notes, request_ko=request)
 
 
 # ---------------- insurance ----------------

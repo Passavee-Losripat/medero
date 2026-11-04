@@ -88,10 +88,14 @@ def default_handler(task: str, system: str, user: Any) -> dict | None:
                           for f in facts]}
 
     if task == "read_prescription":
-        return {"items": [{"drug_name_ko": f"{TAG} 약 이름", "dose": "1정", "times_per_day": "1일 3회",
-                           "days": "3일분", "instructions_ko": "식후 30분",
+        return {"doc_kind": "prescription_form",
+                "items": [{"drug_name_ko": f"{TAG} 약 이름", "dose": "1", "times_per_day": "3",
+                           "days": "3", "instructions_ko": "식후30분", "substitution_ko": "불가",
+                           "not_covered": False, "handwritten_note": None, "truncated": False,
                            "gloss_patient_lang": f"{TAG} Label text would be translated here.",
-                           "confidence": 0.3}], "untranslated_terms": []}
+                           "confidence": 0.3}],
+                "issued_date": "2026-10-31", "valid_days": "3", "disease_code": None,
+                "disease_code_box": "blank", "untranslated_terms": []}
 
     if task == "parse_checklist":
         return {"insurer_name": f"{TAG} Mock insurer", "required_docs": [

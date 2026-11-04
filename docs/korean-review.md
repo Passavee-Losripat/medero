@@ -29,6 +29,9 @@ Nothing here has been reviewed yet. Mark each item ✅ with reviewer and date.
 
 - [ ] Test-script lines in `docs/TEST_SCRIPT.md` section 4: 수술 동의하시겠어요? / 어제 뭐 드셨어요?
 
+- [ ] `fixed_text.py` DISEASE_CODE_REQUEST_KO (asks staff to write the disease code and issue receipt + itemized statement).
+- [ ] MOCK prescription forms `data/mock/prescriptions/forms.json` (column headers and 용법 lines).
+
 ## Thai (patient side)
 
 - [ ] `web/lib/i18n.ts` (th), `fixed_text.py` PATIENT_TEXT["th"], emergency card Thai, Thai MOCK cases.
