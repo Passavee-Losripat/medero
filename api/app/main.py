@@ -21,7 +21,7 @@ from .config import get_settings
 from .pipeline import documents, intake
 from .pipeline.visit import VisitSession, new_session
 from .providers import asr
-from .providers.llm import METER, router_provider, spark_provider
+from .providers.llm import METER, doc_provider, router_provider, spark_provider
 from .safety import glossary
 from .schemas import CapturedDoc, IntakeAnswers
 
@@ -119,7 +119,8 @@ async def demo_guard(request: Request, call_next):
 @app.get("/health")
 def health():
     s = get_settings()
-    return {"ok": True, "fake_models": s.use_fake, "router": s.router_provider, "demo_mode": s.demo_mode,
+    return {"ok": True, "fake_models": s.use_fake, "router": s.router_provider, "doc_reader": s.doc_provider,
+            "demo_mode": s.demo_mode,
             "spark_model": s.spark_model}
 
 
@@ -297,8 +298,9 @@ async def _read_upload(f: UploadFile) -> tuple[bytes, str]:
 @app.post("/prescription")
 async def prescription(file: UploadFile = File(...), lang: str = Form("en")):
     data, mime = await _read_upload(file)
-    reading = await documents.read_prescription(data, mime, lang, spark_provider())
-    return {**reading.model_dump(), "fake_models": get_settings().use_fake}
+    prov = doc_provider()
+    reading = await documents.read_prescription(data, mime, lang, prov)
+    return {**reading.model_dump(), "fake_models": get_settings().use_fake, "reader": _reader(prov)}
 
 
 # ---------------- insurance (P1) ----------------
@@ -320,8 +322,13 @@ async def insurance_checklist(file: UploadFile | None = File(None), text: str | 
 @app.post("/insurance/capture")
 async def insurance_capture(file: UploadFile = File(...)):
     data, mime = await _read_upload(file)
-    doc = await documents.capture_doc(data, mime, spark_provider())
-    return {**doc.model_dump(), "fake_models": get_settings().use_fake}
+    prov = doc_provider()
+    doc = await documents.capture_doc(data, mime, prov)
+    return {**doc.model_dump(), "fake_models": get_settings().use_fake, "reader": _reader(prov)}
+
+
+def _reader(prov) -> dict:
+    return {"name": prov.name, "model": prov.model, "local": bool(getattr(prov, "local", False))}
 
 
 class PackRequest(BaseModel):

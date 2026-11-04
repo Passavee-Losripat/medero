@@ -53,6 +53,13 @@ export default function Prescription() {
         {res && (
           <div className="stack">
             {res.fake_models && <div className="banner">{s.fakeModels}</div>}
+            {res.reader && (
+              <div className="row" style={{ gap: 6 }}>
+                <span className={`badge ${res.reader.local ? "" : "lilac"}`}>
+                  {res.reader.local ? `🔒 ${s.readLocally}` : `☁️ ${s.readCloud}`} · {res.reader.model}
+                </span>
+              </div>
+            )}
             {res.low_confidence && <div className="banner">{s.lowConfidence}</div>}
             {res.notes_patient_lang?.map((n: string, i: number) => (
               <div key={i} className="card flat" style={{ margin: 0 }}><Icon name="info" size={18} /> {n}</div>

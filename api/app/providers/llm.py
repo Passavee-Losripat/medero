@@ -67,18 +67,22 @@ class LLMProvider(Protocol):
 
 class OpenAICompatProvider:
     def __init__(self, *, name: str, base_url: str, api_key: str, model: str,
-                 settings: Settings | None = None, send_effort: bool = True):
+                 settings: Settings | None = None, send_effort: bool = True, extra_body: dict | None = None,
+                 timeout_s: float | None = None, local: bool = False):
         from openai import AsyncOpenAI
 
         self.name = name
         self.model = model
         self.settings = settings or get_settings()
         self.send_effort = send_effort
+        self.extra_body = extra_body
+        self.default_timeout = timeout_s
+        self.local = local  # runs on infrastructure we control; never a third-party API
         self.client = AsyncOpenAI(base_url=base_url, api_key=api_key or "none", max_retries=0)
 
     async def json(self, *, task: str, system: str, user: Content, schema: dict,
                    timeout_s: float | None = None, effort: str | None = None) -> LLMResult:
-        timeout = timeout_s or self.settings.model_timeout_s
+        timeout = max(timeout_s or 0, self.default_timeout or 0) or self.settings.model_timeout_s
         effort = effort if effort is not None else self.settings.reasoning_effort
         kwargs: dict[str, Any] = {
             "model": self.model,
@@ -89,6 +93,8 @@ class OpenAICompatProvider:
         }
         if effort and self.send_effort:
             kwargs["reasoning_effort"] = effort
+        if self.extra_body:
+            kwargs["extra_body"] = self.extra_body
         last_err = "unknown"
         for attempt in range(self.settings.model_max_retries + 1):
             t0 = time.perf_counter()
@@ -178,10 +184,26 @@ def router_provider(s: Settings | None = None, which: str | None = None) -> LLMP
     which = which or s.router_provider
     if which == "rules":
         return None
-    if which == "local":
-        return OpenAICompatProvider(name="local-glimmer", base_url=s.local_llm_base, api_key="local",
-                                    model=s.local_llm_model, settings=s, send_effort=False)
-    if which == "modal":
+    if which in ("local", "modal"):
+        return glimmer_provider(s, which)
+    return spark_provider(s)
+
+
+def glimmer_provider(s: Settings | None = None, where: str = "local") -> LLMProvider:
+    """Muse Glimmer 4-bit via llama.cpp: on this machine ("local") or our own Modal endpoint ("modal")."""
+    s = s or get_settings()
+    kw = {"extra_body": {"chat_template_kwargs": {"reasoning_strength": s.local_reasoning}},
+          "send_effort": False, "settings": s, "timeout_s": s.local_timeout_s, "local": True}
+    if where == "modal":
         return OpenAICompatProvider(name="modal-glimmer", base_url=s.modal_llm_base, api_key=s.modal_llm_key,
-                                    model=s.modal_llm_model, settings=s, send_effort=False)
+                                    model=s.modal_llm_model, **kw)
+    return OpenAICompatProvider(name="local-glimmer", base_url=s.local_llm_base, api_key="local",
+                                model=s.local_llm_model, **kw)
+
+
+def doc_provider(s: Settings | None = None) -> LLMProvider:
+    """Provider for photos that may carry identifiers (guardrail 10)."""
+    s = s or get_settings()
+    if s.doc_provider in ("local", "modal"):
+        return glimmer_provider(s, s.doc_provider)
     return spark_provider(s)

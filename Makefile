@@ -27,7 +27,7 @@ eval:
 
 # Offline: rules baseline + claim matcher only (no model calls).
 eval-offline:
-	LLM_FAKE=1 $(PY) eval/run_eval.py --routers rules --no-rx
+	LLM_FAKE=1 $(PY) eval/run_eval.py --routers rules --no-rx --out eval/results/offline
 
 mock-docs:
 	$(PY) data/mock/render_mock_docs.py
@@ -37,8 +37,13 @@ lint:
 	cd web && npx tsc --noEmit
 
 # Local Glimmer 4-bit via llama.cpp (OpenAI-compatible). Set GLIMMER_GGUF to the model file.
+# Muse Glimmer 4-bit + vision on this Mac (llama.cpp >= b10353; `brew install llama.cpp`).
+# Weights: meta-models/Muse-Glimmer-30B-GGUF (Apache-2.0), kept outside the repo.
+GLIMMER_DIR ?= $(HOME)/models/glimmer
 glimmer:
-	llama-server -m $(GLIMMER_GGUF) --port 8080 -c 8192 --jinja
+	llama-server -m $(GLIMMER_DIR)/Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf \
+	  --mmproj $(GLIMMER_DIR)/mmproj-Muse-Glimmer-30B-Q4_K_M.gguf -a muse-glimmer-30B \
+	  -ngl 99 -c 32768 -np 2 --jinja --host 127.0.0.1 --port 8080 --temp 1.0 --top-p 0.95 --top-k 64
 
 # Phone / iPad on the same Wi-Fi, over HTTPS (needed for the microphone).
 # Open https://<mac-ip>:8000/health once on the device and accept the warning, then https://<mac-ip>:3000

@@ -15,7 +15,9 @@ VERIFIED, the code treats it as an assumption.
 | ASR realtime `wss://api.meta.ai/v1/asr/realtime` | DOCS READ 2026-11-04, not tested: first JSON frame within 10 s with key in `authorization.accessToken`; ack has `sessionId`; binary PCM16 16/24 kHz; events speechStart/transcript/speechEnd/speechComplete; finish with `{"type":"endStream"}`. Adapter not yet aligned; UI uses VAD + file endpoint | `providers/asr.py` |
 | Spark pricing / rate limits | UNKNOWN | spend estimated only if `SPARK_PRICE_*` set; call cap always applies | `config.py` |
 | Contributor-mode data use | UNKNOWN | do not use Contributor-mode models for health-like data | – |
-| Muse Glimmer HF id, license, Korean quality | UNKNOWN | `LOCAL_LLM_MODEL`, `GLIMMER_MODEL_ID` are placeholders | `infra/modal_glimmer.py` |
+| Muse Glimmer HF id, license | VERIFIED 2026-11-05 | `meta-models/Muse-Glimmer-30B-GGUF`, Apache-2.0, not gated; Q4_K_M 17 GB + mmproj 1.4 GB for images; llama.cpp >= b10353 | model card |
+| Glimmer reasoning | VERIFIED 2026-11-05 (model card) | Always thinks; `chat_template_kwargs.reasoning_strength` low/medium/high/xhigh, default high; `reasoning_effort: none` has no effect | `providers/llm.py` glimmer_provider |
+| SAM 3.1 | READ 2026-11-05 | `POST /v1/responses`, model `sam-3.1`, input_text concept or box/point tokens + input_image (URL or data URL); output text records `<|box;...|><|mask;...|>`. Not used: it would receive unredacted photos (guardrail 10); open weights are gated | docs/sam/segmenting |
 
 ## First-run checklist (when the key arrives)
 

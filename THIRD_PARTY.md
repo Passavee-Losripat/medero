@@ -9,7 +9,7 @@ Every outside dependency, model and asset, with its license. Versions are pinned
 |---|---|---|
 | Muse Spark (`muse-spark-1.3`) via Meta Model API | Responder, ask-back, gloss, relay, verifier check, card translation, prescription/insurance reading; router option | Meta Model API terms (**VERIFY** data-use / retention terms; see docs/api-notes.md) |
 | Muse Voice Transcribe (`muse-voice-transcribe-1.0`) | Korean speech-to-text | Meta Model API terms |
-| Muse Glimmer (open weights) | Local 4-bit router (llama.cpp) and Modal baseline | Apache 2.0 per third-party articles (**VERIFY** on Meta's page / Hugging Face) |
+| Muse Glimmer 30B, GGUF Q4_K_M + mmproj (`meta-models/Muse-Glimmer-30B-GGUF`) | Local document reader and router benchmark (llama.cpp on the Mac; same build on Modal) | Apache-2.0 (VERIFIED 2026-11-05 on the model card; not gated). Weights are downloaded, not redistributed. Usage policy: repo `USAGE_POLICY.md` |
 
 ## Python (backend)
 

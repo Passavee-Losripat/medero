@@ -17,3 +17,4 @@ certs/
 *.HEIC
 *.heic
 private/
+eval/results/offline/

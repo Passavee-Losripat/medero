@@ -27,7 +27,7 @@ from app.pipeline import documents, intake  # noqa: E402
 from app.pipeline.router import route  # noqa: E402
 from app.pipeline.verifier import FIXED_PHRASES, check_model, check_rules  # noqa: E402
 from app.pipeline.visit import new_session  # noqa: E402
-from app.providers.llm import METER, router_provider, spark_provider  # noqa: E402
+from app.providers.llm import METER, glimmer_provider, router_provider, spark_provider  # noqa: E402
 from app.schemas import TURN_CLASSES, CapturedDoc, IntakeAnswers, ReplyPlan  # noqa: E402
 
 MOCK = ROOT / "data" / "mock"
@@ -168,10 +168,11 @@ async def eval_visits(router_name: str, cases: dict) -> dict:
 # ---------------- prescription fields ----------------
 
 
-async def eval_rx() -> dict:
+async def eval_rx(reader: str = "spark") -> dict:
     s = get_settings()
-    if s.use_fake:
+    if reader == "spark" and s.use_fake:
         return {"skipped": "no MODEL_API_KEY"}
+    provider = spark_provider(s) if reader == "spark" else glimmer_provider(s, reader)
     rx = MOCK / "prescriptions"
     slips = json.loads((rx / "slips.json").read_text(encoding="utf-8"))["slips"]
     forms = json.loads((rx / "forms.json").read_text(encoding="utf-8"))["forms"]
@@ -190,7 +191,7 @@ async def eval_rx() -> dict:
                 return {"skipped": "run `make mock-docs` first"}
             t0 = time.perf_counter()
             reading = await documents.read_prescription(img.read_bytes(), "image/jpeg" if suffix.endswith("jpg")
-                                                        else "image/png", "en", spark_provider(s))
+                                                        else "image/png", "en", provider)
             lat.append((time.perf_counter() - t0) * 1000)
             for i, truth in enumerate(doc["items"]):
                 got = reading.items[i].model_dump() if i < len(reading.items) else {}
@@ -209,6 +210,7 @@ async def eval_rx() -> dict:
         if doc_total:
             out[name]["form_checks"] = f"{doc_ok}/{doc_total}"
     out["latency_p50_ms"] = pct(lat, 0.5)
+    out["reader"] = f"{provider.name} ({provider.model})"
     return out
 
 
@@ -269,20 +271,22 @@ def to_markdown(r: dict) -> str:
         for k, s in v["latency_ms"].items():
             L.append(f"| {k} | {s['p50']} | {s['p95']} |")
         L.append("")
-    rx = r["prescription"]
     L += ["## Prescription fields (exact match, MOCK)", ""]
-    if "skipped" in rx:
-        L.append(f"- skipped: {rx['skipped']}")
-    else:
-        names = {"labels": "Medicine-bag labels, clean", "labels_photo": "Medicine-bag labels, simulated phone photo",
-                 "forms_photo": "Clinic prescription forms (처방전), simulated phone photo"}
-        L += ["| Set | Docs | Fields | Accuracy | Form checks |", "|---|---|---|---|---|"]
+    names = {"labels": "Medicine-bag labels, clean", "labels_photo": "Medicine-bag labels, simulated phone photo",
+             "forms_photo": "Clinic prescription forms (처방전), simulated phone photo"}
+    for reader, rx in r["prescription"].items():
+        if "skipped" in rx:
+            L.append(f"- {reader}: skipped: {rx['skipped']}")
+            continue
+        L += [f"**Reader: {rx['reader']}** · latency p50 {rx['latency_p50_ms']} ms", "",
+              "| Set | Docs | Fields | Accuracy | Form checks |", "|---|---|---|---|---|"]
         for k, n in names.items():
             if k in rx:
                 x = rx[k]
                 L.append(f"| {n} | {x['docs']} | {x['fields']} | {format(x['field_accuracy'], '.1%')} | {x.get('form_checks', '—')} |")
-        L += ["", "Form checks: document kind, valid-for days, issue date, disease code, disease-code request shown "
-              "only when the box is blank, handwritten note detected.", f"- Reader latency p50: {rx['latency_p50_ms']} ms"]
+        L.append("")
+    L.append("Form checks: document kind, valid-for days, issue date, disease code, disease-code request shown "
+             "only when the box is blank, handwritten note detected.")
     L += ["", "## Claim completeness (deterministic matcher)", "",
           f"- `missing` matched the known gaps in **{r['claims']['exact_match']}** MOCK receipt sets", ""]
     L += ["## Not measured here", "", "- Transcription quality: spot-check recorded role-plays by hand (see docs/api-notes.md).", ""]
@@ -294,6 +298,7 @@ async def main() -> None:
     ap.add_argument("--routers", default="rules,spark")
     ap.add_argument("--visit-routers", default=None, help="routers for full visits (default: same, minus rules)")
     ap.add_argument("--no-rx", action="store_true")
+    ap.add_argument("--rx-readers", default="spark", help="spark, local (Glimmer on this Mac), modal")
     ap.add_argument("--out", default=str(ROOT / "eval" / "results"))
     args = ap.parse_args()
     s = get_settings()
@@ -307,7 +312,8 @@ async def main() -> None:
         "fake": s.use_fake, "spark_model": s.spark_model,
         "router": [await eval_router(n, cases, utts) for n in routers],
         "visits": [await eval_visits(n, cases) for n in visit_routers],
-        "prescription": {"skipped": "--no-rx"} if args.no_rx else await eval_rx(),
+        "prescription": {"spark": {"skipped": "--no-rx"}} if args.no_rx else
+                        {r: await eval_rx(r) for r in args.rx_readers.split(",") if r},
         "claims": eval_claims(),
         "meter": {"calls": METER.calls, "input_tokens": METER.input_tokens, "output_tokens": METER.output_tokens,
                   "est_cost_usd": METER.est_cost_usd(s)},

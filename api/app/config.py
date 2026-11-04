@@ -34,7 +34,13 @@ class Settings:
 
     router_provider: str = field(default_factory=lambda: os.getenv("ROUTER_PROVIDER", "rules"))
     local_llm_base: str = field(default_factory=lambda: os.getenv("LOCAL_LLM_BASE", "http://127.0.0.1:8080/v1"))
-    local_llm_model: str = field(default_factory=lambda: os.getenv("LOCAL_LLM_MODEL", "muse-glimmer-q4"))
+    local_llm_model: str = field(default_factory=lambda: os.getenv("LOCAL_LLM_MODEL", "muse-glimmer-30B"))
+    # VERIFIED 2026-11-05 (model card): Glimmer always thinks; strength is low|medium|high|xhigh (default high)
+    local_reasoning: str = field(default_factory=lambda: os.getenv("LOCAL_REASONING", "low"))
+    # Who reads photos of documents (prescriptions, receipts) that can carry names and ID numbers.
+    # "local" keeps them on infrastructure we run (Glimmer on this machine, or our Modal endpoint).
+    doc_provider: str = field(default_factory=lambda: os.getenv("DOC_PROVIDER", "spark"))
+    local_timeout_s: float = field(default_factory=lambda: _float("LOCAL_TIMEOUT_S", 120.0) or 120.0)
     modal_llm_base: str = field(default_factory=lambda: os.getenv("MODAL_LLM_BASE", ""))
     modal_llm_key: str = field(default_factory=lambda: os.getenv("MODAL_LLM_KEY", ""))
     modal_llm_model: str = field(default_factory=lambda: os.getenv("MODAL_LLM_MODEL", "muse-glimmer"))
