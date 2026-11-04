@@ -17,6 +17,8 @@ documents together.
 
 Built solo for the **Meta Global AI Developer Hackathon** (Indie Developer track, "Build for Your World").
 
+**Demo video (3 min):** https://youtu.be/zWgPUIo8Y0A
+
 **Try it:** **https://medero-pi.vercel.app** on a phone · one-tap demo persona (MOCK): **https://medero-pi.vercel.app/?demo=1**
 
 - Demo limits are on (per-IP rate limit and a daily call cap). All data is MOCK; please don't enter real health data.
