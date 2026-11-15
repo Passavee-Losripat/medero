@@ -26,6 +26,10 @@ Built solo for the **Meta Global AI Developer Hackathon** (Indie Developer track
 
 **Try it:** **https://medero-pi.vercel.app** on a phone · one-tap demo persona (MOCK): **https://medero-pi.vercel.app/?demo=1**
 
+> **Live demo paused (Nov 15, 2026).** The hackathon is over and the backend servers are stopped to save credits,
+> so the site's AI steps won't respond. The [demo video](https://youtu.be/zWgPUIo8Y0A) shows the full journey, and
+> you can run everything yourself with the steps below.
+
 - Demo limits are on (per-IP rate limit and a daily call cap). All data is MOCK; please don't enter real health data.
 - The demo runs on hackathon free credits, under which Meta may use API content for product improvement, so please
   use mock data only. (Photos with a name or ID are read by Muse Glimmer on our own GPU, not by the Meta API.)
